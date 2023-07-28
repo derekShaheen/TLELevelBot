@@ -1,7 +1,19 @@
+import importlib
+import subprocess
+import sys
+
 import discord
 from datetime import time, timedelta, datetime
 import pytz
 import math
+
+def verify_libraries_installed(libraries):
+    for library in libraries:
+        try:
+            importlib.import_module(library[0])
+        except ImportError:
+            print(f"{library[0]} not installed. Installing...")
+            subprocess.call([sys.executable, "-m", "pip", "install", library[1]])
 
 # async def send_embed(ctx, title, description, color):
 #     embed = discord.Embed(title=title, description=description, color=color)

@@ -120,7 +120,7 @@ async def set_channel(ctx, channel_type: str, *, channel_name: str):
 
 @commands.command(name='blacklist', help='Toggle blacklist status for a user')
 @commands.has_permissions(administrator=True)
-async def toggle_blacklist(ctx, user: discord.Member):
+async def blacklist(ctx, user: discord.Member):
     user_data = load_user_data(ctx.guild.id, user.id)
     # Toggle the blacklist status
     user_data['blacklisted'] = not user_data.get('blacklisted', False)

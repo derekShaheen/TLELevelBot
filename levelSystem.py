@@ -11,26 +11,25 @@ import pandas as pd
 from datetime import datetime
 
 async def process_experience(ctx, guild, member, experience_addition, debug = False):
-
     user_data = load_user_data(guild.id, member.id)
     if user_data.get('blacklisted'):
         if debug:
             timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
             print(f"{timestamp}      Issued 0xp to {member.name} [blacklisted].")
-        return 0
+        return
     
     # Current level
     current_level = user_data['level']
 
     # Don't issue experience if the member's status is idle
-    if member.status == discord.Status.idle:
+    if member.status == discord.Status.idle and member.voice and member.voice.channel:
         if debug:
             timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-            print(f"{timestamp}      Issued 0xp to {member.name} [idle]. Experience: {(user_data['experience'] + experience_addition)}, Level: {current_level}")
+            print(f"{timestamp}      Issued 0xp to {member.name} [idle]. Experience: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
         return
-
+    experience_addition = round(experience_addition, 2)
     # Add the experience to the user's total
-    user_data['experience'] += experience_addition
+    user_data['experience'] = round(user_data['experience'] + experience_addition, 2)
     if user_data['experience'] < 0:
         user_data['experience'] = 0
 
@@ -46,7 +45,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
     
     if debug:
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        print(f"{timestamp}      Issued {experience_addition}xp to {member.name}. Experience: {(user_data['experience'] + experience_addition)}, New Level: {new_level}, Prior Level: {current_level}")
+        print(f"{timestamp}      Issued {experience_addition}xp to {member.name}. Experience: {round(user_data['experience'] + experience_addition, 2)}, New Level: {new_level}, Prior Level: {current_level}")
 
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
@@ -85,8 +84,11 @@ async def generate_leaderboard(bot, guild_id):
     stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
     stretched_leaderboard_levels.append(min_level)
 
+    # Calculate height
+    height = min(max_level - min_level, 15)
+
     # Generate ASCII plot for levels
-    ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}'})
+    ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
 
     # Add label
     ascii_plot = ascii_plot + '\n\n\t\t\tTop 9 Users by Rank'
@@ -105,69 +107,6 @@ async def generate_leaderboard(bot, guild_id):
     # Return the ASCII plot
     return ascii_plot
 
-# async def generate_leaderboard(bot, guild_id):
-#     user_data_files = glob.glob(f'data/{guild_id}/[!guild_data]*.yaml')
-
-#     user_data_list = []
-#     for user_data_file in user_data_files:
-#         user_id = path.splitext(path.basename(user_data_file))[0]
-#         user_data = load_user_data(guild_id, user_id)
-#         user_data_list.append((user_id, user_data))
-
-#     user_data_list.sort(key=lambda item: item[1]['experience'], reverse=True)
-
-#     leaderboard_data = []
-#     max_level = 0
-#     max_experience = 0
-#     for rank, (user_id, user_data) in enumerate(user_data_list[:10], start=1):
-#         user = await bot.fetch_user(int(user_id))
-#         # Add the rank prefix to the username
-#         leaderboard_data.append([f'{rank}. {user.name}', user_data["level"], user_data["experience"]])
-#         max_level = max(max_level, user_data["level"])  # Track the maximum level
-#         max_experience = max(max_experience, user_data["experience"])  # Track the maximum experience
-
-#     # Convert the data into a Pandas DataFrame and sort by level
-#     df = pd.DataFrame(leaderboard_data, columns=['User', 'Level', 'Experience'])
-#     df.sort_values('Level', inplace=True)
-
-#     # Create the plot
-#     plt.figure(figsize=(10, 5))
-
-#     # Get the cumulative experience for each level up to max_level and
-#     # duplicate each value, shifting the levels by 0.99 for the second value
-#     experiences = cumulative_experience_for_level()[:max_level+1]
-#     levels = [i + j/100.0 for i in range(max_level+1) for j in [0, 99]]
-#     experiences_step = [val for val in experiences for _ in (0, 1)]
-
-#     # Plot the line for the experience per level
-#     sns.lineplot(x=levels, y=experiences_step, color='blue')
-
-#     # Plot the users on the leaderboard
-#     palette = sns.color_palette("hsv", len(leaderboard_data))
-#     scatter = sns.scatterplot(x='Level', y='Experience', hue='User', palette=palette, s=100, data=df)
-
-#     # Sort the legend labels by the rank prefix
-#     handles, labels = scatter.get_legend_handles_labels()
-#     labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: int(t[0].split('.')[0])))
-#     scatter.legend(handles, labels)
-
-#     plt.title('Leaderboard')
-#     plt.xlabel('Level')
-#     plt.ylabel('Experience')
-
-#     # Set x and y limits
-#     plt.xlim(0, max_level+1)
-#     plt.ylim(0, max_experience+100)  # Adding a little padding to the maximum experience for aesthetics
-
-#     # Save it to a BytesIO object
-#     buf = io.BytesIO()
-#     plt.savefig(buf, format='png')
-#     buf.seek(0)
-
-#     # Return the BytesIO object
-#     return buf
-
-
 #@lru_cache(maxsize=None)  # Unbounded cache, you may want to restrict the size in a real application
 def calculate_level(experience, debug = False):
     # Get experience constant from config
@@ -185,7 +124,7 @@ def calculate_level(experience, debug = False):
     
     return level
 
-@lru_cache(maxsize=None)  # Unbounded cache, you may want to restrict the size in a real application
+@lru_cache(maxsize=None)
 def cumulative_experience_for_level(debug=False):
     # Get experience constant from config
     config = load_config()
