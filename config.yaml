@@ -1,0 +1,4 @@
+spam_limit: 10
+experience_per_chat: 3
+experience_per_minute_voice: 10
+experience_constant: 1.5

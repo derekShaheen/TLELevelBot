@@ -1,0 +1,12 @@
+# VS Code
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Data folder
+data/
+
+# Secrets
+_secrets.py
