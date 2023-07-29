@@ -51,7 +51,7 @@ async def voice_activity_tracker():
     for guild in bot.guilds:
         for member in guild.members:
             # Check if the member is connected to a voice channel (but not the AFK channel)
-            if member.voice and member.voice.channel and (member.voice.channel.id != guild.afk_channel):
+            if member.voice and member.voice.channel and (member.voice.channel.id != guild.afk_channel.id):
                 # Check if the member is alone in the voice channel
                 is_alone = len(member.voice.channel.members) == 1 or (member.voice.self_mute and member.voice.self_deaf)
                 # Check if all other members are idle
@@ -74,6 +74,7 @@ async def voice_activity_tracker():
                 # Add experience and level up if necessary
                 await process_experience(bot, guild, member, experience_gain, True)
     if debug:
+        timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
         print(f"{timestamp} ...credit update complete.")
 
 
