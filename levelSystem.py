@@ -9,6 +9,7 @@ import discord
 import asciichartpy
 import pandas as pd
 from datetime import datetime
+from util import get_random_color
 
 async def process_experience(ctx, guild, member, experience_addition, debug = False):
     user_data = load_user_data(guild.id, member.id)
@@ -27,6 +28,11 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
             timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
             print(f"{timestamp}      Issued 0xp to {member.name} [idle]. Experience: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
         return
+    
+    # Add a bonus if the member has boosted the server 
+    if discord.utils.get(member.roles, name='Server Booster') is not None:
+        experience_addition *= 1.1
+
     experience_addition = round(experience_addition, 2)
     # Add the experience to the user's total
     user_data['experience'] = round(user_data['experience'] + experience_addition, 2)
@@ -69,8 +75,7 @@ async def generate_leaderboard(bot, guild_id):
     max_level = 0
     max_username_len = 0
     rank_emoji = ["🥇", "🥈", "🥉"] + ["🏅"]*2 + ["🔹"]*2 + ["🔸"]*2 + [""]*10
-    #for rank, (user_id, user_data) in enumerate(user_data_list[:10], start=1):
-    for rank, (user_id, user_data) in enumerate(user_data_list[:10], start=1):
+    for rank, (user_id, user_data) in enumerate(user_data_list[:9], start=1):
         user = await bot.fetch_user(int(user_id))
         username = user.display_name or user.name
         username = username[0].upper() + username[1:]  # Capitalize the first letter
@@ -80,32 +85,44 @@ async def generate_leaderboard(bot, guild_id):
         leaderboard_levels.append(user_data['level'])
         min_level = min(min_level, user_data["level"])  # Track the minimum level
         max_level = max(max_level, user_data["level"])  # Track the maximum level
-    # Duplicate each level 3 times to stretch the plot
+
+    max_level_len = 0
+    max_xp_len = 0
+    for _, level, xp in leaderboard_data[:9]:
+        max_level_len = max(max_level_len, len(str(level)))  # Track the maximum level length
+        max_xp_len = max(max_xp_len, len(str(round(xp))))  # Track the maximum XP length
+
+    # Find the next level that's lower than min_level
+    next_lower_level = next((user_data['level'] for user_id, user_data in user_data_list[9:] if user_data['level'] < min_level), min_level)
     stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
-    stretched_leaderboard_levels.append(min_level)
+    stretched_leaderboard_levels.append(next_lower_level)
 
     # Calculate height
-    height = min(max_level - min_level, 15)
+    height = min(max_level - next_lower_level, 15)
 
     # Generate ASCII plot for levels
     ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
 
     # Add label
-    ascii_plot = ascii_plot + '\n\n\t\t\tTop 9 Users by Rank'
+    ascii_plot = ascii_plot + '\n\n\t\tTop 9 Users by Reputation'
 
     # Add user labels to the plot, pad usernames to align level and XP info
     for username, level, xp in leaderboard_data[:9]:
-        ascii_plot += '\n' + username.ljust(max_username_len) + f'  (Level: {level}, XP: {round(xp)})'
+        level_str = str(level).rjust(max_level_len)
+        xp_str = str(round(xp)).rjust(max_xp_len)
+        ascii_plot += '\n' + username.ljust(max_username_len) + f'  (Level: {level_str} Rep: {xp_str})'
+
 
     # Add label
     ascii_plot = '   Level\n' + ascii_plot
 
     # Add title
     timestamp = datetime.now().strftime("[%Y-%m-%d %H:00]")
-    ascii_plot = '\n\t\t\t' + timestamp + '\n   Earn XP by participating in the server!\n' + ascii_plot
+    ascii_plot = '\n\t\t\t' + timestamp + '\n   Earn Rep by participating in the server!\n' + ascii_plot
 
     # Return the ASCII plot
     return ascii_plot
+
 
 #@lru_cache(maxsize=None)  # Unbounded cache, you may want to restrict the size in a real application
 def calculate_level(experience, debug = False):
@@ -181,6 +198,9 @@ async def unassign_roles_above_level(guild, new_level, member):
                     await member.remove_roles(role)
 
 async def log_level_up(ctx, guild, member, new_level):
+    if 1 < new_level <= 5:  # Don't log for levels >1 and <=5
+        return
+
     guild_data = load_guild_data(guild.id)
     levelup_log_channel_id = guild_data.get('publog')
     levelup_log_message_id = guild_data.get('levelup_log_message')
@@ -205,9 +225,13 @@ async def log_level_up(ctx, guild, member, new_level):
     save_guild_data(guild.id, guild_data)
 
     levelup_embed = discord.Embed(
-        title="Level Up Log!",
-        color=discord.Color.green()
+        title="Reputation Level Up Log",
+        color=get_random_color(True)
     )
+
+    # Instructions to check rank
+    check_rank_instructions = "You can check your current reputation level by typing `!level`. If you want to check someone else's level, type `!level @username`."
+    levelup_embed.add_field(name='How to check your rank:', value=check_rank_instructions, inline=False)
 
     for timestamp, log_text in guild_data['levelup_log']:
         levelup_embed.add_field(name=timestamp + ' ' + log_text, value='\u200b', inline=False)

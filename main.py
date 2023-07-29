@@ -6,22 +6,25 @@ libraries = [
     ("yaml", "PyYAML"),
     ("asciichartpy", "asciichartpy"),
     ("pandas", "pandas"),
-    ("pytz", "pytz")
+    ("pytz", "pytz"),
+    ("requests", "requests")
 ]
 
 verify_libraries_installed(libraries)
 
 import asyncio
 import discord
+from discord import app_commands
 from discord.ext import commands, tasks
 from datetime import datetime, timedelta, time
+from discord.ext.commands import Greedy, Context
+from typing import Literal, Optional
 
 import _secrets
-from commandsAdmin import set_level, xp, set_level_role, set_channel, blacklist
-from commandsUser import level
 from configManager import load_user_data, load_config, save_user_data, load_guild_data, save_guild_data
 from levelSystem import process_experience, generate_leaderboard
-from util import send_embed, get_initial_delay
+from util import get_initial_delay, get_random_color, send_developer_message
+import auto_update_git
 
 debug = True
 
@@ -29,10 +32,14 @@ intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', intents=intents, reconnect=True)
 config = load_config()
 
+# Import commands after 'bot' has been initialized
+from commandsAdmin import set_level, xp, set_level_role, set_channel, blacklist
+import commandsUser
+
 bot.add_command(set_level)
 bot.add_command(set_level_role)
 bot.add_command(xp)
-bot.add_command(level)
+#bot.add_command(level)
 bot.add_command(set_channel)
 bot.add_command(blacklist)
 
@@ -157,9 +164,9 @@ async def update_leaderboard():
                     leaderboard_message = None  # Reset to None if the message was not found
                     
             lb_embed = discord.Embed(
-                title="Leaderboard for The Last Echelon",
+                title="Reputation Leaderboard for The Last Echelon",
                 description=f"```{ascii_plot}```",
-                color=discord.Color.gold()
+                color=get_random_color(True)
             )
 
             if leaderboard_message:
@@ -180,6 +187,56 @@ async def before_update_leaderboard():
     initial_delay = get_initial_delay(interval=timedelta(hours=1, seconds=5))
     if debug:
         print('Update leaderboard scheduled for: {}'.format(initial_delay))
+    await asyncio.sleep(initial_delay)
+
+#------ Sync Tree ------
+guild = discord.Object(id='262726474967023619')
+# Get Guild ID from right clicking on server icon
+# Must have devloper mode on discord on setting>Advance>Developer Mode
+#More info on tree can be found on discord.py Git Repo
+@bot.command()
+@commands.guild_only()
+@commands.is_owner()
+async def sync(
+  ctx: Context, guilds: Greedy[discord.Object], spec: Optional[Literal["~", "*", "^"]] = None) -> None:
+    if not guilds:
+        if spec == "~":
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "*":
+            ctx.bot.tree.copy_global_to(guild=ctx.guild)
+            synced = await ctx.bot.tree.sync(guild=ctx.guild)
+        elif spec == "^":
+            ctx.bot.tree.clear_commands(guild=ctx.guild)
+            await ctx.bot.tree.sync(guild=ctx.guild)
+            synced = []
+        else:
+            synced = await ctx.bot.tree.sync()
+        if debug:
+            print(f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}")
+        await ctx.send(
+            f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
+        )
+        return
+
+    ret = 0
+    for guild in guilds:
+        try:
+            await ctx.bot.tree.sync(guild=guild)
+        except discord.HTTPException:
+            pass
+        else:
+            ret += 1
+
+    await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
+
+@tasks.loop(seconds=30)
+async def check_version():
+    await auto_update_git.check_version(bot, send_developer_message)
+
+@check_version.before_loop
+async def before_check_version():
+    initial_delay = get_initial_delay(interval=timedelta(seconds=30))
+    print('Version Check loop scheduled for: {}'.format(initial_delay))
     await asyncio.sleep(initial_delay)
 
 async def run_bot():

@@ -1,11 +1,13 @@
 import importlib
 import subprocess
 import sys
+import random
 
 import discord
 from datetime import time, timedelta, datetime
 import pytz
 import math
+from _secrets import DEVELOPER_ID
 
 def verify_libraries_installed(libraries):
     for library in libraries:
@@ -58,3 +60,38 @@ def get_initial_delay(target_time: time = None, interval: timedelta = None) -> f
                                microsecond=0) + timedelta(seconds=next_run_seconds)
 
     return (next_run - now).total_seconds()
+
+def get_random_color(noReds = False):
+    if noReds:
+        color_list = [
+            "default", "teal", "green", "blue", "purple", "magenta", "gold", "blurple",
+            # "dark_teal", "dark_green", "dark_blue", "dark_purple",
+            # "dark_magenta", "dark_gold", "dark_orange",
+            # "lighter_grey", "dark_grey", "light_grey", "darker_grey", "greyple"
+        ]
+    else:
+        color_list = [
+            "default", "teal", "green", "blue", "purple", "magenta", "gold", "orange", "red", "blurple",
+            # "dark_teal", "dark_green", "dark_blue", "dark_purple",
+            # "dark_magenta", "dark_gold", "dark_orange", "dark_red",
+            # "lighter_grey", "dark_grey", "light_grey", "darker_grey", "greyple"
+        ]
+    random_color_name = random.choice(color_list)
+    return getattr(discord.Color, random_color_name)()
+
+async def send_developer_message(client, title, description, color, file=None, fields=None):
+    """Send a private message to the developer as an embed."""
+    # Fetch the developer's user object using their ID
+    developer = await client.fetch_user(DEVELOPER_ID)
+
+    # Create the embed
+    embed = discord.Embed(title=title, description=description, color=color)
+    if fields:
+        for name, value in fields:
+            embed.add_field(name=name, value=value, inline=False)
+
+    # Send the embed with the image (if provided) to the developer
+    if file:
+        await send_embed(developer, title, description, color, None, fields, file)
+    else:
+        await send_embed(developer, title, description, color, None, fields)

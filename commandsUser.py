@@ -1,37 +1,65 @@
 from discord.ext import commands
 import discord
-from configManager import load_user_data
+from configManager import load_user_data, save_user_data
+from util import send_embed, get_random_color
+from datetime import datetime, timedelta
+from discord import Interaction
+from discord import app_commands
+from __main__ import bot
 
-@commands.command(
-    brief='Displays the level and experience of a user.',  # Short description of command
-    help='Displays the level and experience of a user. If no user is mentioned, it will display the level of the command user.',  # Detailed description
-    aliases=['lvl']  # Alternative ways to call the command
-)
-async def level(ctx, member: discord.Member = None):
-    # If no member is mentioned, show the level of the command user
+def check_command_cooldown(user_data, command_key, cooldown_minutes):
+    # Check if the last use was less than cooldown_minutes ago
+    now = datetime.now()
+    last_used = user_data.get(command_key)
+    if last_used and now - last_used < timedelta(minutes=cooldown_minutes):
+        return False  # The command is still cooling down
+    else:
+        user_data[command_key] = now
+        return True  # The command is not cooling down and can be used
+
+# Create the context menu command that only works on members
+@bot.tree.context_menu(name='Show Reputation')
+async def show_rep(interaction: discord.Interaction, member: discord.Member):
+    await show_rep_util(interaction, member)
+
+# Create the slash command
+@bot.tree.command(description='Show Reputation for yourself or another member.')
+@app_commands.guild_only()
+@app_commands.checks.cooldown(1, 5.0, key=lambda i: (i.guild_id, i.user.id))
+@app_commands.describe(member='The member you want to check the reputation for...')
+async def rep(interaction: discord.Interaction, member: discord.Member = None):
+    # If no member is mentioned, show the rep of the command user
     if not member:
-        member = ctx.author
-    
-    # Load user data
-    user_data = load_user_data(ctx.guild.id, member.id)
-    
-    # Create an embed message
-    embed = discord.Embed(title=f"{member.name}'s level", description=f"Level: {user_data['level']}\nExperience: {user_data['experience']}", color=0x00ff00)
-    await ctx.send(embed=embed)
+        member = interaction.user
 
-# @commands.command()
-# async def leaderboard(ctx):
-#     # Load all user data for the guild
-#     user_data_list = []
-#     for member in ctx.guild.members:
-#         user_data = load_user_data(ctx.guild.id, member.id)
-#         user_data_list.append((member, user_data['experience'], user_data['level']))
-    
-#     # Sort by experience in descending order
-#     user_data_list.sort(key=lambda x: x[1], reverse=True)
-    
-#     # Create an embed message
-#     embed = discord.Embed(title=f"Leaderboard for {ctx.guild.name}", color=0x00ff00)
-#     for i, (member, experience, level) in enumerate(user_data_list[:10], start=1):
-#         embed.add_field(name=f"#{i} {member.name}", value=f"Level: {level}\nExperience: {experience}", inline=False)
-#     await ctx.send(embed=embed)
+    # Run the same code as the context menu command
+    await show_rep_util(interaction, member)
+
+async def show_rep_util(interaction: discord.Interaction, member: discord.Member):
+    # Load user data
+    user_data = load_user_data(interaction.guild.id, member.id)
+
+    # Capitalize the first letter of the username
+    username = member.name[0].upper() + member.name[1:]
+
+    # Approximate the experience to the nearest 100 if it's more than 100
+    experience = user_data['experience']
+    if experience > 100:
+        experience = round(experience / 100) * 100
+
+    # Create an embed
+    embed = discord.Embed(
+        title=f"{username}'s Reputation Information",
+        description='',
+        color=get_random_color()
+    )
+
+    avatar_url = str(member.avatar.url) if member.avatar else str(member.default_avatar.url)
+    embed.set_thumbnail(url=avatar_url)
+
+    # Add fields to the embed
+    embed.add_field(name="Level", value=user_data['level'], inline=True)
+    embed.add_field(name="Approx Reputation", value=experience, inline=True)  # Use the approximated experience
+
+    # Send the embed with the interaction response
+    await interaction.response.send_message(embed=embed)
