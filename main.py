@@ -33,21 +33,27 @@ bot = commands.Bot(command_prefix='!', intents=intents, reconnect=True)
 config = load_config()
 
 # Import commands after 'bot' has been initialized
-from commandsAdmin import set_level, xp, set_level_role, set_channel, blacklist
+from commandsAdmin import set_level, setrep, set_level_role, set_channel, blacklist
 import commandsUser
 
 bot.add_command(set_level)
 bot.add_command(set_level_role)
-bot.add_command(xp)
+bot.add_command(setrep)
 #bot.add_command(level)
 bot.add_command(set_channel)
 bot.add_command(blacklist)
 
 @bot.event
 async def on_ready():
+    auto_update_git.set_initial_run_sha()
+
     voice_activity_tracker.start()
     update_leaderboard.start()
+
+    check_version.start()
+
 #    await update_leaderboard()
+#    await check_version()
 
 @tasks.loop(minutes=1)
 async def voice_activity_tracker():

@@ -59,14 +59,17 @@ If you want to customize the frequency of leaderboard updates, you can adjust th
 The bot includes the following administrator commands:
 
 - `!set_level [member] [level]`: Set the level of a specific user.
-- `!xp [member] [experience]`: Adjust the experience of a specific user.
+- `!setrep [member] [experience]`: Adjust the reputation of a specific user.
 - `!set_role [level] [role]`: Set a role for a specific level.
 - `!set_channel [channel_type] [channel_name]`: Set a specific channel for certain notifications. Valid channel types are "leaderboard" or "publog".
 - `!blacklist [user]`: Toggle blacklist status for a user. 
 
 ## User Commands
 
-- `!level [member]` or `!lvl [member]`: Displays the level and experience of a user. If no user is mentioned, it will display the level of the command user.
+- `/rep [member]`: Displays the level and experience of a user. If no user is mentioned, it will display the level of the command user.
+
+You can also right-click any user and view their rep from the menu.
+![ShowRepContext](https://i.imgur.com/Gt0PlN8.png)
 
 ## Configuration
 

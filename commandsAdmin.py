@@ -39,8 +39,7 @@ async def set_level(ctx, member: discord.Member, level: int):
     help='Adjust the experience of a specific user. This command requires administrator permissions.',  # Detailed description
 )
 @commands.has_permissions(administrator=True)
-
-async def xp(ctx, member: discord.Member, experience: int):
+async def setrep(ctx, member: discord.Member, experience: int):
     # Load user data
     user_data = load_user_data(ctx.guild.id, member.id)
     
