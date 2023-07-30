@@ -26,7 +26,7 @@ from levelSystem import process_experience, generate_leaderboard
 from util import get_initial_delay, get_random_color, send_developer_message
 import auto_update_git
 
-debug = True
+debug = False
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', intents=intents, reconnect=True)
@@ -208,10 +208,6 @@ async def clear_channel_except(guild_id: int, channel_id: int):
     
     keep_message_ids.append(guild_data.get('leaderboard_message'))
     keep_message_ids.append(guild_data.get('levelup_log_message'))
-
-    # Limit None fetches up to 100 messages
-    #messages = await channel.history(limit=200).flatten()
-    #messages = await discord.utils.get(channel.history())
 
     async for message in channel.history():
         if message.id not in keep_message_ids:
