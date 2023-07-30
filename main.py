@@ -156,6 +156,8 @@ async def update_leaderboard():
         leaderboard_channel_id = guild_data.get('leaderboard')
         leaderboard_channel = bot.get_channel(leaderboard_channel_id) if leaderboard_channel_id else None
 
+        await clear_channel_except(guild.id, leaderboard_channel_id)
+
         if leaderboard_channel:
             ascii_plot = await generate_leaderboard(bot, guild.id)
 
@@ -194,6 +196,32 @@ async def before_update_leaderboard():
     if debug:
         print('Update leaderboard scheduled for: {}'.format(initial_delay))
     await asyncio.sleep(initial_delay)
+
+async def clear_channel_except(guild_id: int, channel_id: int):
+    keep_message_ids = []
+    guild_data = load_guild_data(guild_id)
+    channel = bot.get_channel(channel_id)
+
+    if not channel:
+        print(f"Channel {channel_id} not found")
+        return
+
+    keep_message_ids.append(guild_data.get('leaderboard_message'))
+    keep_message_ids.append(guild_data.get('levelup_log'))
+
+    # Limit None fetches up to 100 messages
+    messages = await channel.history(limit=None).flatten()
+
+    for message in messages:
+        if message.id not in keep_message_ids:
+            try:
+                await message.delete()
+            except discord.NotFound:
+                pass  # Message already deleted, move on to next message
+            except discord.HTTPException as e:
+                print(f"Failed to delete message {message.id}: {e}")
+            await asyncio.sleep(0.5)  # To respect the rate limit
+
 
 #------ Sync Tree ------
 guild = discord.Object(id='262726474967023619')
