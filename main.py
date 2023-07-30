@@ -48,11 +48,11 @@ async def on_ready():
     auto_update_git.set_initial_run_sha()
 
     voice_activity_tracker.start()
-#    update_leaderboard.start()
+    update_leaderboard.start()
 
     check_version.start()
 
-    await update_leaderboard()
+#    await update_leaderboard()
 #    await check_version()
 
 @tasks.loop(minutes=1)
@@ -156,7 +156,7 @@ async def update_leaderboard():
         leaderboard_channel_id = guild_data.get('leaderboard')
         leaderboard_channel = bot.get_channel(leaderboard_channel_id) if leaderboard_channel_id else None
 
-        #await clear_channel_except(guild.id, leaderboard_channel_id)
+        await clear_channel_except(guild.id, leaderboard_channel_id)
 
         if leaderboard_channel:
             ascii_plot = await generate_leaderboard(bot, guild.id)
@@ -210,9 +210,10 @@ async def clear_channel_except(guild_id: int, channel_id: int):
     keep_message_ids.append(guild_data.get('levelup_log_message'))
 
     # Limit None fetches up to 100 messages
-    messages = await channel.history(limit=None).flatten()
+    #messages = await channel.history(limit=200).flatten()
+    #messages = await discord.utils.get(channel.history())
 
-    for message in messages:
+    async for message in channel.history():
         if message.id not in keep_message_ids:
             try:
                 await message.delete()
