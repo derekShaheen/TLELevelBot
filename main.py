@@ -222,6 +222,16 @@ async def clear_channel_except(guild_id: int, channel_id: int):
                 print(f"Failed to delete message {message.id}: {e}")
             await asyncio.sleep(0.5)  # To respect the rate limit
 
+@app_commands.slash_command(
+    name='update_leaderboard',
+    description='Update the leaderboard. Admin only command.',
+)
+@commands.has_permissions(administrator=True)
+async def update_leaderboard_command(interaction: discord.Interaction):
+    await interaction.response.defer()  # Acknowledge the command, but don't send a response yet
+    await update_leaderboard()  # Update the leaderboard
+    await interaction.followup.send("Leaderboard has been updated!")  # Send a response after the leaderboard has been updated
+
 
 #------ Sync Tree ------
 guild = discord.Object(id='262726474967023619')
