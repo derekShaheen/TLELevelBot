@@ -220,7 +220,7 @@ async def clear_channel_except(guild_id: int, channel_id: int):
 
 @bot.tree.command(
     name='update_leaderboard',
-    description='Update the leaderboard. Admin only command.',
+    description='Admin only command. Update the leaderboard.',
 )
 @app_commands.checks.cooldown(1, 5.0, key=lambda i: (i.guild_id, i.user.id))
 @app_commands.checks.has_permissions(administrator=True)
