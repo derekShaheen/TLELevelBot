@@ -3,7 +3,6 @@ import discord
 from configManager import load_user_data, save_user_data
 from util import send_embed, get_random_color
 from datetime import datetime, timedelta
-from discord import Interaction
 from discord import app_commands
 from __main__ import bot
 

@@ -10,9 +10,9 @@ from __main__ import bot
 @bot.tree.command(description='Set the level of a specific user.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
-@app_commands.option('member', description='The member whose level you want to set.', type=app_commands.Member)
-@app_commands.option('level', description='The level to set for the member.', type=int)
-async def set_level(interaction: Interaction, member: app_commands.Member, level: int):
+@app_commands.describe(member='The member whose level you want to set.')
+@app_commands.describe(level='The level to set for the member.')
+async def set_level(interaction: Interaction, member: discord.Member, level: int):
     # Load user data
     user_data = load_user_data(interaction.guild.id, member.id)
     
@@ -37,9 +37,9 @@ async def set_level(interaction: Interaction, member: app_commands.Member, level
 @bot.tree.command(description='Adjust the experience of a specific user.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
-@app_commands.option('member', description='The member whose experience you want to adjust.', type=app_commands.Member)
-@app_commands.option('experience', description='The experience to adjust for the member.', type=int)
-async def setrep(interaction: Interaction, member: app_commands.Member, experience: int):
+@app_commands.describe(member='The member whose experience you want to adjust.')
+@app_commands.describe(experience='The experience to adjust for the member.')
+async def setrep(interaction: Interaction, member: discord.Member, experience: int):
     # Load user data
     user_data = load_user_data(interaction.guild.id, member.id)
     
@@ -74,9 +74,9 @@ async def setrep(interaction: Interaction, member: app_commands.Member, experien
 @bot.tree.command(description='Set a role for a specific level.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
-@app_commands.option('level', description='The level you want to set the role for.', type=int)
-@app_commands.option('role', description='The role you want to set for the level.', type=app_commands.Role)
-async def set_level_role(interaction: Interaction, level: int, role: app_commands.Role):
+@app_commands.describe(level='The level you want to set the role for.')
+@app_commands.describe(role='The role you want to set for the level.')
+async def set_level_role(interaction: Interaction, level: int, role: discord.Role):
     # Load guild data
     guild_data = load_guild_data(interaction.guild.id)
     
@@ -93,27 +93,34 @@ async def set_level_role(interaction: Interaction, level: int, role: app_command
 @bot.tree.command(description='Set a specific channel for certain notifications.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
-@app_commands.option('channel_type', description='The type of the channel to set.', type=app_commands.ChannelType)
-@app_commands.option('channel', description='The channel to set for the type.', type=app_commands.Channel)
-async def set_channel(interaction: Interaction, channel_type: app_commands.ChannelType, channel: app_commands.Channel):
+@app_commands.describe(channel_type='The type of the channel to set.')
+@app_commands.describe(channel_name='The name of the channel to set for the type.')
+async def set_channel(interaction: Interaction, channel_type: str, channel_name: str):
     guild_id = interaction.guild.id
     guild_data = load_guild_data(guild_id)
     
-    if str(channel_type).lower() not in ['leaderboard', 'publog']:
+    if channel_type.lower() not in ['leaderboard', 'publog']:
         await interaction.response.send_message('Invalid channel type. Please specify either "leaderboard" or "publog".')
         return
 
+    # Get the channel by its name
+    channel = discord.utils.get(interaction.guild.channels, name=channel_name)
+    if not channel:
+        await interaction.response.send_message(f"Couldn't find a channel named {channel_name}.")
+        return
+
     # Update the guild data
-    guild_data[str(channel_type).lower()] = channel.id
+    guild_data[channel_type.lower()] = channel.id
     save_guild_data(guild_id, guild_data)
 
-    await interaction.response.send_message(f"Set the {channel_type} channel to {channel.name}.")
+    await interaction.response.send_message(f"Set the {channel_type} channel to {channel_name}.")
+
 
 @bot.tree.command(description='Toggle blacklist status for a user.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
-@app_commands.option('user', description='The user to toggle blacklist status for.', type=app_commands.User)
-async def blacklist(interaction: Interaction, user: app_commands.User):
+@app_commands.describe(user='The user to toggle blacklist status for.')
+async def blacklist(interaction: Interaction, user: discord.Member):
     user_data = load_user_data(interaction.guild.id, user.id)
     # Toggle the blacklist status
     user_data['blacklisted'] = not user_data.get('blacklisted', False)

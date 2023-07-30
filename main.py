@@ -51,7 +51,6 @@ async def on_ready():
     update_leaderboard.start()
 
     check_version.start()
-    sync()
 #    await update_leaderboard()
 #    await check_version()
 
