@@ -223,7 +223,7 @@ async def clear_channel_except(guild_id: int, channel_id: int):
     description='Update the leaderboard. Admin only command.',
 )
 @app_commands.checks.cooldown(1, 5.0, key=lambda i: (i.guild_id, i.user.id))
-@commands.has_permissions(administrator=True)
+@app_commands.checks.has_permissions(administrator=True)
 async def update_leaderboard_command(interaction: discord.Interaction):
     await interaction.response.defer()  # Acknowledge the command, but don't send a response yet
     await update_leaderboard()  # Update the leaderboard
