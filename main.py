@@ -14,7 +14,7 @@ verify_libraries_installed(libraries)
 
 import asyncio
 import discord
-from discord import app_commands
+from discord import app_commands, Interaction
 from discord.ext import commands, tasks
 from datetime import datetime, timedelta, time
 from discord.ext.commands import Greedy, Context
@@ -156,7 +156,7 @@ async def update_leaderboard():
         leaderboard_channel_id = guild_data.get('leaderboard')
         leaderboard_channel = bot.get_channel(leaderboard_channel_id) if leaderboard_channel_id else None
 
-        await clear_channel_except(guild.id, leaderboard_channel_id)
+        #await clear_channel_except(guild.id, leaderboard_channel_id)
 
         if leaderboard_channel:
             ascii_plot = await generate_leaderboard(bot, guild.id)
@@ -205,7 +205,7 @@ async def clear_channel_except(guild_id: int, channel_id: int):
     if not channel:
         print(f"Channel {channel_id} not found")
         return
-
+    
     keep_message_ids.append(guild_data.get('leaderboard_message'))
     keep_message_ids.append(guild_data.get('levelup_log_message'))
 
@@ -222,10 +222,11 @@ async def clear_channel_except(guild_id: int, channel_id: int):
                 print(f"Failed to delete message {message.id}: {e}")
             await asyncio.sleep(0.5)  # To respect the rate limit
 
-@app_commands.slash_command(
+@bot.tree.command(
     name='update_leaderboard',
     description='Update the leaderboard. Admin only command.',
 )
+@app_commands.checks.cooldown(1, 5.0, key=lambda i: (i.guild_id, i.user.id))
 @commands.has_permissions(administrator=True)
 async def update_leaderboard_command(interaction: discord.Interaction):
     await interaction.response.defer()  # Acknowledge the command, but don't send a response yet
