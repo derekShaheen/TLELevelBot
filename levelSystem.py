@@ -142,18 +142,28 @@ def calculate_level(experience, debug = False):
     
     return level
 
+# Initialize the experience list globally
+experience_cache = [0]  # Start the list with 0 so that the indexes line up with the levels
+
 def cumulative_experience_for_level(target_level: int):
     # Get experience constant from config
     config = load_config()
     experience_constant = config['experience_constant']
 
-    experience_list = [0]  # Start the list with 0 so that the indexes line up with the levels
-    for level in range(1, target_level+1):
-        experience_for_level = (level * (level ** experience_constant)) + 30
-        total_experience = experience_list[-1] + experience_for_level
-        experience_list.append(total_experience)
+    global experience_cache  # Access the global variable
 
-    return experience_list
+    if target_level < len(experience_cache):
+        # We have the data in cache, just return it
+        return experience_cache[:target_level+1]
+    
+    # We need to calculate more levels
+    for level in range(len(experience_cache), target_level+1):
+        experience_for_level = (level * (level ** experience_constant)) + 30
+        total_experience = experience_cache[-1] + experience_for_level
+        experience_cache.append(total_experience)
+
+    return experience_cache
+
 
 
 async def adjust_roles(guild, old_level, new_level, member):

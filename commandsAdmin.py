@@ -20,7 +20,8 @@ async def set_level(interaction: Interaction, member: discord.Member, level: int
     old_level = user_data['level']
     
     # Calculate the experience needed for the target level
-    experience = cumulative_experience_for_level(level)
+    experience_list = cumulative_experience_for_level(level)
+    experience = experience_list[-1]  # Get the last item from the list, which corresponds to the cumulative experience needed for the target level
     
     # Set the user's level and experience
     user_data['level'] = level
@@ -33,6 +34,7 @@ async def set_level(interaction: Interaction, member: discord.Member, level: int
     await adjust_roles(interaction.guild, old_level, level, member)
     
     await interaction.response.send_message(f"{member.name}'s level has been set to {level}.")
+
 
 @bot.tree.command(description='Adjust the experience of a specific user.')
 @app_commands.guild_only()
