@@ -26,7 +26,7 @@ from levelSystem import process_experience, generate_leaderboard
 from util import get_initial_delay, get_random_color, send_developer_message
 import auto_update_git
 
-debug = True
+debug = False
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', intents=intents, reconnect=True)
@@ -197,9 +197,6 @@ async def before_update_leaderboard():
 
 #------ Sync Tree ------
 guild = discord.Object(id='262726474967023619')
-# Get Guild ID from right clicking on server icon
-# Must have devloper mode on discord on setting>Advance>Developer Mode
-#More info on tree can be found on discord.py Git Repo
 @bot.command()
 @commands.guild_only()
 @commands.is_owner()

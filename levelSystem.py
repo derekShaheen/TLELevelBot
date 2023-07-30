@@ -104,13 +104,14 @@ async def generate_leaderboard(bot, guild_id):
     ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
 
     # Add label
-    ascii_plot = ascii_plot + '\n\n\t\tTop 9 Users by Reputation'
+    ascii_plot = ascii_plot + '\n\n\t\tTop 9 Users by Level'
 
     # Add user labels to the plot, pad usernames to align level and XP info
     for username, level, xp in leaderboard_data[:9]:
         level_str = str(level).rjust(max_level_len)
         xp_str = str(round(xp)).rjust(max_xp_len)
-        ascii_plot += '\n' + username.ljust(max_username_len) + f'  (Level: {level_str} Rep: {xp_str})'
+        #ascii_plot += '\n' + username.ljust(max_username_len) + f'  (Level: {level_str} Rep: {xp_str})'
+        ascii_plot += '\n' + username.ljust(max_username_len) + f'  Rep Level: {level_str}'
 
 
     # Add label
@@ -141,22 +142,16 @@ def calculate_level(experience, debug = False):
     
     return level
 
-@lru_cache(maxsize=None)
-def cumulative_experience_for_level(debug=False):
+def cumulative_experience_for_level(target_level: int):
     # Get experience constant from config
     config = load_config()
     experience_constant = config['experience_constant']
-    
-    # Set target level
-    target_level = 200
 
     experience_list = [0]  # Start the list with 0 so that the indexes line up with the levels
     for level in range(1, target_level+1):
         experience_for_level = (level * (level ** experience_constant)) + 30
         total_experience = experience_list[-1] + experience_for_level
         experience_list.append(total_experience)
-        if debug:
-            print(f"Level: {level}, Experience: {total_experience}, Experience for level: {experience_for_level}")
 
     return experience_list
 
@@ -230,7 +225,7 @@ async def log_level_up(ctx, guild, member, new_level):
     )
 
     # Instructions to check rank
-    check_rank_instructions = "You can check your current reputation level by typing `!level`. If you want to check someone else's level, type `!level @username`."
+    check_rank_instructions = "You can check your current reputation by typing `/rep`. If you want to check someone else's rep, type `/rep @username`."
     levelup_embed.add_field(name='How to check your rank:', value=check_rank_instructions, inline=False)
 
     for timestamp, log_text in guild_data['levelup_log']:

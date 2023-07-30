@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 from configManager import load_guild_data, save_guild_data, load_user_data, save_user_data
-from levelSystem import calculate_level, adjust_roles
+from levelSystem import calculate_level, adjust_roles, cumulative_experience_for_level
 from util import send_embed
 
 @commands.command(
@@ -18,8 +18,7 @@ async def set_level(ctx, member: discord.Member, level: int):
     
     # Calculate the experience needed for the target level
     experience = 0
-    for i in range(level - 1):
-        experience += (i + 1) * 2
+    experience = cumulative_experience_for_level(level)
     
     # Set the user's level and experience
     user_data['level'] = level

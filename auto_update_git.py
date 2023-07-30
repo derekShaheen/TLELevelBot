@@ -31,8 +31,11 @@ async def check_version(bot, send_developer_message):
     check_sha = get_latest_commit_sha()
 
     if not check_sha.startswith('Error') and initial_run_sha != check_sha:
-        title = "New bot version has been detected."
-        description = f'Initiating the update and restart process...\n[{initial_run_sha}] -> [{check_sha}]'
-        color = 0xff00ff
-        await send_developer_message(bot, title, description, color)
-        await bot.close()
+        # title = "New bot version has been detected."
+        # description = f'Initiating the update and restart process...\n[{initial_run_sha}] -> [{check_sha}]'
+        # color = 0xff00ff
+        # await send_developer_message(bot, title, description, color)
+        try:
+            await bot.close()
+        except:
+            pass
