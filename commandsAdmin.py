@@ -7,7 +7,7 @@ from discord import Interaction
 from discord import app_commands
 from __main__ import bot
 
-@bot.tree.command(description='Set the level of a specific user.')
+@bot.tree.command(description='Admin only command. Set the level of a specific user.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(member='The member whose level you want to set.')
@@ -36,7 +36,7 @@ async def set_level(interaction: Interaction, member: discord.Member, level: int
     await interaction.response.send_message(f"{member.name}'s level has been set to {level}.")
 
 
-@bot.tree.command(description='Adjust the experience of a specific user.')
+@bot.tree.command(description='Admin only command. Adjust the experience of a specific user.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(member='The member whose experience you want to adjust.')
@@ -73,7 +73,7 @@ async def setrep(interaction: Interaction, member: discord.Member, experience: i
     
     await interaction.response.send_message(f"{abs(experience)} experience points have been {'added to' if experience >= 0 else 'removed from'} {member.name}'s total.")
 
-@bot.tree.command(description='Set a role for a specific level.')
+@bot.tree.command(description='Admin only command. Set a role for a specific level.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(level='The level you want to set the role for.')
@@ -92,7 +92,7 @@ async def set_level_role(interaction: Interaction, level: int, role: discord.Rol
     
     await interaction.response.send_message(f"The role for level {level} has been set to {role.name}.")
 
-@bot.tree.command(description='Set a specific channel for certain notifications.')
+@bot.tree.command(description='Admin only command. Set a specific channel for certain notifications.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(channel_type='The type of the channel to set.')
@@ -118,7 +118,7 @@ async def set_channel(interaction: Interaction, channel_type: str, channel_name:
     await interaction.response.send_message(f"Set the {channel_type} channel to {channel_name}.")
 
 
-@bot.tree.command(description='Toggle blacklist status for a user.')
+@bot.tree.command(description='Admin only command. Toggle blacklist status for a user.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(user='The user to toggle blacklist status for.')
