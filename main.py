@@ -33,15 +33,15 @@ bot = commands.Bot(command_prefix='!', intents=intents, reconnect=True)
 config = load_config()
 
 # Import commands after 'bot' has been initialized
-from commandsAdmin import set_level, setrep, set_level_role, set_channel, blacklist
+import commandsAdmin
 import commandsUser
 
-bot.add_command(set_level)
-bot.add_command(set_level_role)
-bot.add_command(setrep)
+# bot.add_command(set_level)
+# bot.add_command(set_level_role)
+# bot.add_command(setrep)
 #bot.add_command(level)
-bot.add_command(set_channel)
-bot.add_command(blacklist)
+# bot.add_command(set_channel)
+# bot.add_command(blacklist)
 
 @bot.event
 async def on_ready():
@@ -51,7 +51,7 @@ async def on_ready():
     update_leaderboard.start()
 
     check_version.start()
-
+    sync()
 #    await update_leaderboard()
 #    await check_version()
 
