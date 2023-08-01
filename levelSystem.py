@@ -47,7 +47,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
     save_user_data(guild.id, member.id, user_data)
 
     # Adjust roles
-    await adjust_roles(guild, current_level, new_level, member)
+    await adjust_roles(guild, new_level, member)
     
     if debug:
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")

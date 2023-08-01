@@ -36,13 +36,6 @@ config = load_config()
 import commandsAdmin
 import commandsUser
 
-# bot.add_command(set_level)
-# bot.add_command(set_level_role)
-# bot.add_command(setrep)
-#bot.add_command(level)
-# bot.add_command(set_channel)
-# bot.add_command(blacklist)
-
 @bot.event
 async def on_ready():
     auto_update_git.set_initial_run_sha()
@@ -88,8 +81,6 @@ async def voice_activity_tracker():
     if debug:
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
         print(f"{timestamp} ...credit update complete.")
-
-
 
 @voice_activity_tracker.before_loop
 async def before_voice_activity_tracker():
