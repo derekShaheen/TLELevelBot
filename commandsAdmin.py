@@ -102,19 +102,26 @@ async def setrep(interaction: Interaction, member: discord.Member, reputation: i
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(level='The level you want to set the role for.')
 @app_commands.describe(role='The role you want to set for the level.')
-async def set_level_role(interaction: Interaction, level: int, role: discord.Role):
+async def set_level_role(interaction: Interaction, level: int, role: discord.Role = None):
     # Load guild data
     guild_data = load_guild_data(interaction.guild.id)
     
-    # Add the level-role mapping
+    # Create 'level_roles' field if it doesn't exist
     if 'level_roles' not in guild_data:
         guild_data['level_roles'] = {}
-    guild_data['level_roles'][str(level)] = role.id
-    
-    # Save guild data
-    save_guild_data(interaction.guild.id, guild_data)
-    
-    await interaction.response.send_message(f"The role for level {level} has been set to {role.name}.")
+        
+    if role is None:
+        # Remove the role mapping for the level if it exists
+        if str(level) in guild_data['level_roles']:
+            del guild_data['level_roles'][str(level)]
+            save_guild_data(interaction.guild.id, guild_data)
+            await interaction.response.send_message(f"The role for level {level} has been removed.")
+    else:
+        # Add the level-role mapping
+        guild_data['level_roles'][str(level)] = role.id
+        save_guild_data(interaction.guild.id, guild_data)
+        await interaction.response.send_message(f"The role for level {level} has been set to {role.name}.")
+
 
 @bot.tree.command(description='Admin only command. Set a specific channel for certain notifications.')
 @app_commands.guild_only()

@@ -164,43 +164,27 @@ def cumulative_experience_for_level(target_level: int):
 
     return experience_cache
 
-
-
-async def adjust_roles(guild, old_level, new_level, member):
-    if new_level > old_level:
-        await assign_roles_on_level_up(guild, new_level, member)
-    elif new_level <= old_level:
-        await unassign_roles_above_level(guild, new_level, member)
-
-async def assign_roles_on_level_up(guild, new_level, member):
+async def adjust_roles(guild, new_level, member):
     guild_data = load_guild_data(guild.id)
 
     if 'level_roles' in guild_data:
         level_roles = guild_data['level_roles']
-        level = new_level
 
-        # Iterate through all level roles that are within the user's current level
-        for l in range(1, level + 1):
-            if str(l) in level_roles:
-                role = discord.utils.get(guild.roles, id=level_roles[str(l)])
-                
-                if role and role not in member.roles:
-                    await member.add_roles(role)
+        # Iterate through all level roles 
+        for level_str, role_id in level_roles.items():
+            level = int(level_str)
+            role = discord.utils.get(guild.roles, id=role_id)
 
-async def unassign_roles_above_level(guild, new_level, member):
-    guild_data = load_guild_data(guild.id)
+            # If role not found or doesn't change, skip this iteration
+            if role is None or (role in member.roles and level <= new_level):
+                continue
 
-    if 'level_roles' in guild_data:
-        level_roles = guild_data['level_roles']
-        level = new_level
-
-        # iterate through all level roles above the user's current level
-        for l in range(level + 1, max(map(int, level_roles.keys())) + 1):
-            if str(l) in level_roles:
-                role = discord.utils.get(guild.roles, id=level_roles[str(l)])
-                
-                if role and role in member.roles:
-                    await member.remove_roles(role)
+            # Add role if level is less or equal to new level
+            if level <= new_level and role not in member.roles:
+                await member.add_roles(role)
+            # Remove role if level is above new level
+            elif level > new_level and role in member.roles:
+                await member.remove_roles(role)
 
 async def log_level_up(ctx, guild, member, new_level):
     if 1 < new_level <= 5:  # Don't log for levels >1 and <=5
