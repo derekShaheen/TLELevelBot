@@ -191,7 +191,7 @@ async def update_leaderboard():
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
         print(f"{timestamp} Update complete.")
 
-@update_leaderboard.before_loop
+@update_leaderboard_task.before_loop
 async def before_update_leaderboard_task():
     initial_delay = get_initial_delay(interval=timedelta(hours=1, seconds=5))
     if debug:
