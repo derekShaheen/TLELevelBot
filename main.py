@@ -48,7 +48,7 @@ async def on_ready():
     auto_update_git.set_initial_run_sha()
 
     voice_activity_tracker.start()
-    update_leaderboard.start()
+    update_leaderboard_task.start()
 
     check_version.start()
 #    await update_leaderboard()
