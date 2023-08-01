@@ -235,7 +235,7 @@ async def log_level_up(ctx, guild, member, new_level):
     )
 
     # Instructions to check rank
-    check_rank_instructions = "You can check your current reputation by typing `/rep`. If you want to check someone else's rep, type `/rep @username`. You can also right click on any user and go to `Apps > Show Reputation`. Try it now!"
+    check_rank_instructions = "You can check your current reputation by typing `/rep`. If you want to check someone else's rep, type `/rep @username`. You can also right click on any user and go to `Apps > Show Reputation`. Try it now! All chats in this channel are cleared every hour."
     levelup_embed.add_field(name='How to check your rank:', value=check_rank_instructions, inline=False)
 
     for timestamp, log_text in guild_data['levelup_log']:

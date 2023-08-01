@@ -26,7 +26,7 @@ from levelSystem import process_experience, generate_leaderboard
 from util import get_initial_delay, get_random_color, send_developer_message
 import auto_update_git
 
-debug = False
+debug = True
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', intents=intents, reconnect=True)
@@ -48,7 +48,7 @@ async def on_ready():
     auto_update_git.set_initial_run_sha()
 
     voice_activity_tracker.start()
-    update_leaderboard.start()
+    update_leaderboard_task.start()
 
     check_version.start()
 #    await update_leaderboard()
@@ -143,8 +143,10 @@ async def on_message(message):
     # Process commands after checking for spam and awarding points
     await bot.process_commands(message)
 
-
 @tasks.loop(minutes=60)
+async def update_leaderboard_task():
+    update_leaderboard()
+
 async def update_leaderboard():
     if debug:
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
@@ -189,8 +191,8 @@ async def update_leaderboard():
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
         print(f"{timestamp} Update complete.")
 
-@update_leaderboard.before_loop
-async def before_update_leaderboard():
+@update_leaderboard_task.before_loop
+async def before_update_leaderboard_task():
     initial_delay = get_initial_delay(interval=timedelta(hours=1, seconds=5))
     if debug:
         print('Update leaderboard scheduled for: {}'.format(initial_delay))
