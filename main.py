@@ -48,7 +48,7 @@ async def on_ready():
     auto_update_git.set_initial_run_sha()
 
     voice_activity_tracker.start()
-    update_leaderboard_task.start()
+    update_leaderboard.start()
 
     check_version.start()
 #    await update_leaderboard()
@@ -145,7 +145,7 @@ async def on_message(message):
 
 @tasks.loop(minutes=60)
 async def update_leaderboard_task():
-    update_leaderboard()
+    await update_leaderboard()
 
 async def update_leaderboard():
     if debug:
@@ -191,7 +191,7 @@ async def update_leaderboard():
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
         print(f"{timestamp} Update complete.")
 
-@update_leaderboard_task.before_loop
+@update_leaderboard.before_loop
 async def before_update_leaderboard_task():
     initial_delay = get_initial_delay(interval=timedelta(hours=1, seconds=5))
     if debug:
