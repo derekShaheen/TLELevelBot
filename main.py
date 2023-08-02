@@ -47,8 +47,10 @@ async def on_ready():
         # Load guild data for each guild the bot is in
         for guild in bot.guilds:
             guild_data = load_guild_data(guild.id)
-            debug_logger.log(f"Guild {guild.name} data: {guild_data}")
-            
+            # Remove 'levelup_log' from data for logging
+            guild_data_for_logging = {k: v for k, v in guild_data.items() if k != 'levelup_log'}
+            debug_logger.log(f"Guild {guild.name} data: {guild_data_for_logging}")
+
     auto_update_git.set_initial_run_sha()
 
     voice_activity_tracker.start()
