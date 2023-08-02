@@ -39,7 +39,7 @@ async def check_version(bot, send_developer_message):
         debug_logger = DebugLogger.get_instance()
         debug_logger.log(f"[New Version Detected] 🥳 Initiating the update and restart process...\n[{initial_run_sha}] -> [{check_sha}]")
         try:
-            debug_logger.flush()
+            await debug_logger.flush()
             await bot.close()
         except:
             pass
