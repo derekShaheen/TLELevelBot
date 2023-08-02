@@ -49,17 +49,19 @@ def save_guild_data(guild_id, data):
 
 def load_config():
     default_config = {
-        'chat_limit': 10,
+        'chat_limit': 5,
         'experience_per_chat': 25,
         'experience_per_minute_voice': 10,
         'experience_constant': 1.5,
         'experience_streaming_bonus': 1
     }
+    # Create data directory if it doesn't exist
+    makedirs(f'data/', exist_ok=True)
     # Load the config file if it exists, otherwise create a new config file
-    if path.exists('config.yaml'):
-        with open('config.yaml', 'r') as file:
+    if path.exists('data/config.yaml'):
+        with open('data/config.yaml', 'r') as file:
             return safe_load(file)
     else:
-        with open('config.yaml', 'w') as file:
+        with open('data/config.yaml', 'w') as file:
             safe_dump(default_config, file)
         return default_config

@@ -42,6 +42,13 @@ import commandsUser
 async def on_ready():
     if debug:
         debug_logger.start()
+        debug_logger.log(f"Configuration: {config}")
+
+        # Load guild data for each guild the bot is in
+        for guild in bot.guilds:
+            guild_data = load_guild_data(guild.id)
+            debug_logger.log(f"Guild {guild.name} data: {guild_data}")
+            
     auto_update_git.set_initial_run_sha()
 
     voice_activity_tracker.start()
@@ -142,9 +149,7 @@ async def update_leaderboard_task():
     await update_leaderboard()
 
 async def update_leaderboard():
-    if debug:
-        timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        debug_logger.log(f"Updating leaderboard...")
+    debug_logger.log(f"Updating leaderboard...")
 
     for guild in bot.guilds:
         guild_data = load_guild_data(guild.id)
