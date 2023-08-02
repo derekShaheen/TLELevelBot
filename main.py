@@ -24,12 +24,14 @@ import _secrets
 from configManager import load_user_data, load_config, save_user_data, load_guild_data, save_guild_data
 from levelSystem import process_experience, generate_leaderboard
 from util import get_initial_delay, get_random_color, send_developer_message
+from debug_logger import DebugLogger
 import auto_update_git
 
 debug = True
 
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix='!', intents=intents, reconnect=True)
+debug_logger = DebugLogger.get_instance(bot)
 config = load_config()
 
 # Import commands after 'bot' has been initialized
@@ -38,20 +40,23 @@ import commandsUser
 
 @bot.event
 async def on_ready():
+    if debug:
+        debug_logger.start()
     auto_update_git.set_initial_run_sha()
 
     voice_activity_tracker.start()
     update_leaderboard_task.start()
 
     check_version.start()
+
 #    await update_leaderboard()
 #    await check_version()
 
 @tasks.loop(minutes=1)
 async def voice_activity_tracker():
     if debug:
-        timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        print(f"{timestamp} Updating credits...")
+        debug_logger.log(f"Updating credits...")
+
     config = load_config()
     for guild in bot.guilds:
         for member in guild.members:
@@ -78,9 +83,7 @@ async def voice_activity_tracker():
 
                 # Add experience and level up if necessary
                 await process_experience(bot, guild, member, experience_gain, True)
-    if debug:
-        timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        print(f"{timestamp} ...credit update complete.")
+        debug_logger.log(f"...credit update complete.")
 
 @voice_activity_tracker.before_loop
 async def before_voice_activity_tracker():
@@ -141,7 +144,7 @@ async def update_leaderboard_task():
 async def update_leaderboard():
     if debug:
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        print(f"{timestamp} Updating leaderboard...")
+        debug_logger.log(f"Updating leaderboard...")
 
     for guild in bot.guilds:
         guild_data = load_guild_data(guild.id)
@@ -178,9 +181,7 @@ async def update_leaderboard():
 
             guild_data['leaderboard_message'] = leaderboard_message.id
             save_guild_data(guild.id, guild_data)
-    if debug:
-        timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        print(f"{timestamp} Update complete.")
+        debug_logger.log(f"Update complete.")
 
 @update_leaderboard_task.before_loop
 async def before_update_leaderboard_task():

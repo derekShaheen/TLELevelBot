@@ -10,13 +10,13 @@ import asciichartpy
 import pandas as pd
 from datetime import datetime
 from util import get_random_color
+from debug_logger import DebugLogger
 
 async def process_experience(ctx, guild, member, experience_addition, debug = False):
+    debug_logger = DebugLogger.get_instance()
     user_data = load_user_data(guild.id, member.id)
     if user_data.get('blacklisted'):
-        if debug:
-            timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-            print(f"{timestamp}      Issued 0xp to {member.name} [blacklisted].")
+        debug_logger.log("      Issued 0xp to {member.name} [blacklisted].")
         return
     
     # Current level
@@ -24,9 +24,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
 
     # Don't issue experience if the member's status is idle
     if member.status == discord.Status.idle and member.voice and member.voice.channel:
-        if debug:
-            timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-            print(f"{timestamp}      Issued 0xp to {member.name} [idle]. Experience: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
+        debug_logger.log("      Issued 0xp to {member.name} [idle]. Experience: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
         return
     
     # Add a bonus if the member has boosted the server 
@@ -49,10 +47,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
     # Adjust roles
     await adjust_roles(guild, new_level, member)
     
-    if debug:
-        timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
-        print(f"{timestamp}      Issued {experience_addition}xp to {member.name}. Experience: {round(user_data['experience'] + experience_addition, 2)}, New Level: {new_level}, Prior Level: {current_level}")
-
+    debug_logger.log(f"Issued {experience_addition}xp to {member.name}. Experience: {round(user_data['experience'] + experience_addition, 2)}, New Level: {new_level}, Prior Level: {current_level}")
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
 
