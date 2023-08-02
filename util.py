@@ -7,7 +7,7 @@ import discord
 from datetime import time, timedelta, datetime
 import pytz
 import math
-from _secrets import DEVELOPER_ID
+from _secrets import DEVELOPER_ID, SERVER_TIMEZONE
 
 def verify_libraries_installed(libraries):
     for library in libraries:
@@ -39,7 +39,7 @@ async def send_embed(recipient, title, description, color, url=None, fields=None
         await recipient.send(embed=embed)
 
 def get_initial_delay(target_time: time = None, interval: timedelta = None) -> float:
-    now = datetime.now(pytz.timezone('America/Chicago'))
+    now = datetime.now(pytz.timezone(SERVER_TIMEZONE))
 
     if target_time:
         # Schedule task at the target time
@@ -99,3 +99,6 @@ async def send_developer_message(client, title, description, color, file=None, f
 def get_celebration_emoji():
     emojis = ['🎉', '🥳', '🎊', '👏', '💪', '🚀', '🔥', '🙌', '🥂', '🍾', '👀']
     return random.choice(emojis)
+
+def add_commas(number):
+    return '{:,}'.format(number)

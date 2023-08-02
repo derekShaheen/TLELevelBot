@@ -4,6 +4,7 @@ import discord
 import _secrets
 import yaml
 import os
+import pytz
 
 class DebugLogger:
     """
@@ -28,7 +29,7 @@ class DebugLogger:
 
     _instance = None
     bot = None
-    MESSAGE_INFO_FILE = 'data/debugconf.yaml'
+    DEBUG_INFO_FILE = 'data/debugconf.yaml'
     CHAR_LIMIT = 2000
     SLEEP_TIME = 10
 
@@ -55,7 +56,8 @@ class DebugLogger:
 
     def log(self, message):
         # Add a timestamp to the message and store it in the message list
-        timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        now = datetime.now(pytz.timezone('US/Central'))
+        timestamp = now.strftime("[%Y-%m-%d %H:%M:%S]")
         debug_message = f"{timestamp} {message}"
         self.debug_message_list.append(debug_message)
         print(debug_message)
@@ -68,20 +70,19 @@ class DebugLogger:
 
     def load_message_info(self):
         # Load the current message ID and content from the YAML file, or initialize them if the file doesn't exist
-        if os.path.exists(self.MESSAGE_INFO_FILE):
-            with open(self.MESSAGE_INFO_FILE, 'r') as f:
+        if os.path.exists(self.DEBUG_INFO_FILE):
+            with open(self.DEBUG_INFO_FILE, 'r') as f:
                 self.current_message_info = yaml.safe_load(f)
         else:
             self.current_message_info = {'id': None, 'content': []}
 
     def save_message_info(self):
         # Save the current message ID and content to the YAML file
-        with open(self.MESSAGE_INFO_FILE, 'w') as f:
+        with open(self.DEBUG_INFO_FILE, 'w') as f:
             yaml.safe_dump(self.current_message_info, f)
 
     async def flush(self):
         if self.debug_message_list:
-            # The content handling logic is the same as in the send_loop method
             self.current_message_info['content'].extend(self.debug_message_list)
             self.debug_message_list = []
 

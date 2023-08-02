@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
-from configManager import load_user_data, save_user_data
-from util import send_embed, get_random_color
+from configManager import load_user_data, load_all_user_data
+from util import get_random_color, add_commas
 from datetime import datetime, timedelta
 from discord import app_commands
 from __main__ import bot
@@ -37,6 +37,10 @@ async def rep(interaction: discord.Interaction, member: discord.Member = None):
 async def show_rep_util(interaction: discord.Interaction, member: discord.Member):
     # Load user data
     user_data = load_user_data(interaction.guild.id, member.id)
+    
+    # Load all users' data and find the rank of the user
+    all_user_data = load_all_user_data(interaction.guild.id)
+    user_rank = [i for i, user in enumerate(all_user_data) if user[0] == str(member.id)][0] + 1
 
     # Capitalize the first letter of the username
     username = member.name[0].upper() + member.name[1:]
@@ -57,8 +61,9 @@ async def show_rep_util(interaction: discord.Interaction, member: discord.Member
     embed.set_thumbnail(url=avatar_url)
 
     # Add fields to the embed
+    embed.add_field(name="Reputation Rank", value=user_rank, inline=True)  # User rank
     embed.add_field(name="Level", value=user_data['level'], inline=True)
-    embed.add_field(name="Approx Reputation", value=experience, inline=True)  # Use the approximated experience
+    embed.add_field(name="Approx Rep Score", value=add_commas(experience), inline=True)  # Use the approximated experience
 
     # Send the embed with the interaction response
     await interaction.response.send_message(embed=embed)

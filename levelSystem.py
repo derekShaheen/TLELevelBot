@@ -9,7 +9,7 @@ import discord
 import asciichartpy
 import pandas as pd
 from datetime import datetime
-from util import get_random_color, get_celebration_emoji
+from util import get_random_color, get_celebration_emoji, add_commas
 from debug_logger import DebugLogger
 
 async def process_experience(ctx, guild, member, experience_addition, debug = False):
@@ -47,7 +47,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
     # Adjust roles
     await adjust_roles(guild, new_level, member)
     
-    debug_logger.log(f"{experience_addition}r ➥ {member.name}. Rep: {round(user_data['experience'] + experience_addition, 2)}, New Level: {new_level}, Prior Level: {current_level}")
+    debug_logger.log(f"{experience_addition}r ➥ {member.name}. Rep: {add_commas(round(user_data['experience'] + experience_addition, 2))}, New Level: {new_level}, Prior Level: {current_level}")
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
 
@@ -88,8 +88,8 @@ async def generate_leaderboard(bot, guild_id):
         max_xp_len = max(max_xp_len, len(str(round(xp))))  # Track the maximum XP length
 
     # Find the next level that's lower than min_level
-    next_lower_level = next((user_data['level'] for user_id, user_data in user_data_list[9:] if user_data['level'] < min_level), min_level)
     stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
+    next_lower_level = next((user_data['level'] for user_id, user_data in user_data_list[9:] if user_data['level'] < min_level), min_level)
     stretched_leaderboard_levels.append(next_lower_level)
 
     # Calculate height

@@ -1,5 +1,5 @@
 from yaml import safe_load, safe_dump
-from os import makedirs, path
+from os import makedirs, path, walk
 
 
 def load_user_data(guild_id, user_id):
@@ -15,6 +15,21 @@ def load_user_data(guild_id, user_id):
             safe_dump(default_user_data, file)
         return default_user_data
 
+def load_all_user_data(guild_id):
+    # Create the guild directory if it doesn't exist
+    makedirs(f'data/{guild_id}', exist_ok=True)
+    # Initialize the user data list
+    user_data_list = []
+    # Walk the guild directory and load each user's data
+    for root, dirs, files in walk(f'data/{guild_id}'):
+        for file in files:
+            if file.endswith('.yaml') and file != 'guild_data.yaml':
+                with open(path.join(root, file), 'r') as f:
+                    user_data = safe_load(f)
+                    user_data_list.append((file.replace('.yaml', ''), user_data))
+    # Sort the list by user experience
+    user_data_list.sort(key=lambda x: x[1]['experience'], reverse=True)
+    return user_data_list
 
 def save_user_data(guild_id, user_id, data):
     with open(f'data/{guild_id}/{user_id}.yaml', 'w') as file:
