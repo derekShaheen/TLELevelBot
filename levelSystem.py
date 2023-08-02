@@ -93,7 +93,7 @@ async def generate_leaderboard(bot, guild_id):
     stretched_leaderboard_levels.append(next_lower_level)
 
     # Calculate height
-    height = min(max_level - next_lower_level, 15)
+    height = min(max_level - next_lower_level, 16)
 
     # Generate ASCII plot for levels
     ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
