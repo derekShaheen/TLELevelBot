@@ -16,7 +16,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
     debug_logger = DebugLogger.get_instance()
     user_data = load_user_data(guild.id, member.id)
     if user_data.get('blacklisted'):
-        debug_logger.log("➥ Issued 0xp to {member.name} [blacklisted].")
+        debug_logger.log("➥ Issued 0r to {member.name} [blacklisted].")
         return
     
     # Current level
@@ -24,7 +24,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
 
     # Don't issue experience if the member's status is idle
     if member.status == discord.Status.idle and member.voice and member.voice.channel:
-        debug_logger.log(f"➥ Issued 0xp to {member.name} [idle]. Experience: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
+        debug_logger.log(f"➥ Issued 0r to {member.name} [idle]. Rep: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
         return
     
     # Add a bonus if the member has boosted the server 
@@ -47,7 +47,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
     # Adjust roles
     await adjust_roles(guild, new_level, member)
     
-    debug_logger.log(f"➥ Issued {experience_addition}xp to {member.name}. Experience: {round(user_data['experience'] + experience_addition, 2)}, New Level: {new_level}, Prior Level: {current_level}")
+    debug_logger.log(f"{experience_addition}r ➥ {member.name}. Rep: {round(user_data['experience'] + experience_addition, 2)}, New Level: {new_level}, Prior Level: {current_level}")
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
 

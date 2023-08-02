@@ -64,7 +64,7 @@ async def on_ready():
 @tasks.loop(minutes=1)
 async def voice_activity_tracker():
     if debug:
-        debug_logger.log(f"Updating credits...")
+        debug_logger.log(f"Updating credits")
 
     config = load_config()
     for guild in bot.guilds:
@@ -92,7 +92,7 @@ async def voice_activity_tracker():
 
                 # Add experience and level up if necessary
                 await process_experience(bot, guild, member, experience_gain, True)
-        debug_logger.log(f"...credit update complete.")
+        debug_logger.log(f"Credit update complete.")
 
 @voice_activity_tracker.before_loop
 async def before_voice_activity_tracker():

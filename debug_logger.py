@@ -20,7 +20,7 @@ class DebugLogger:
     Example usage:
     ```
     from debug_logger import DebugLogger
-    debug_logger = DebugLogger.get_instance(bot)
+    debug_logger = DebugLogger.get_instance(bot) # Only need to pass the bot once
     debug_logger.start()
     debug_logger.log("Init complete")  # note the absence of "await" here
     ```
