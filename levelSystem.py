@@ -9,7 +9,7 @@ import discord
 import asciichartpy
 import pandas as pd
 from datetime import datetime
-from util import get_random_color
+from util import get_random_color, get_celebration_emoji
 from debug_logger import DebugLogger
 
 async def process_experience(ctx, guild, member, experience_addition, debug = False):
@@ -204,7 +204,7 @@ async def log_level_up(ctx, guild, member, new_level):
 
     timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M]")
     member_name = member.name[0].upper() + member.name[1:]  # Capitalize member's name
-    new_levelup_text = f"{member_name} is now level {new_level}!"
+    new_levelup_text = f"{member_name} is now level {new_level}! {get_celebration_emoji()}"
 
     # If the levelup_log exists in guild_data, append the new level up text to the list
     # and slice the list to keep only the last 10 elements. If it does not exist, initialize it

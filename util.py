@@ -95,3 +95,7 @@ async def send_developer_message(client, title, description, color, file=None, f
         await send_embed(developer, title, description, color, None, fields, file)
     else:
         await send_embed(developer, title, description, color, None, fields)
+
+def get_celebration_emoji():
+    emojis = ['🎉', '🥳', '🎊', '👏', '💪', '🚀', '🔥', '🙌', '🥂', '🍾', '👀']
+    return random.choice(emojis)

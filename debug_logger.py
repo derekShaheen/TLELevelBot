@@ -79,40 +79,41 @@ class DebugLogger:
         with open(self.MESSAGE_INFO_FILE, 'w') as f:
             yaml.safe_dump(self.current_message_info, f)
 
-    async def send_loop(self):
-        while True:
-            if self.debug_message_list:
-                # Append new content to current content
-                self.current_message_info['content'].extend(self.debug_message_list)
-                self.debug_message_list = []
+    async def flush(self):
+        if self.debug_message_list:
+            # The content handling logic is the same as in the send_loop method
+            self.current_message_info['content'].extend(self.debug_message_list)
+            self.debug_message_list = []
 
-                # Trim content to stay within the character limit
-                lines = self.current_message_info['content']
-                new_content = ""
-                for line in reversed(lines):
-                    if len(new_content + line + "\n") <= self.CHAR_LIMIT:
-                        new_content = line + "\n" + new_content
-                    else:
-                        break
-                new_content = new_content.strip()  # remove trailing newline
-
-                developer = await self.get_developer()
-
-                self.load_message_info()
-
-                if self.current_message_info['id']:
-                    try:
-                        current_message = await developer.fetch_message(self.current_message_info['id'])
-                        await current_message.edit(content=new_content)
-                        self.current_message_info['content'] = new_content.split('\n')
-                        self.save_message_info()
-                    except discord.NotFound:
-                        current_message = await developer.send(content=new_content)
-                        self.current_message_info = {'id': current_message.id, 'content': new_content.split('\n')}
-                        self.save_message_info()
+            lines = self.current_message_info['content']
+            new_content = ""
+            for line in reversed(lines):
+                if len(new_content + line + "\n") <= self.CHAR_LIMIT:
+                    new_content = line + "\n" + new_content
                 else:
+                    break
+            new_content = new_content.strip()
+
+            developer = await self.get_developer()
+
+            self.load_message_info()
+
+            if self.current_message_info['id']:
+                try:
+                    current_message = await developer.fetch_message(self.current_message_info['id'])
+                    await current_message.edit(content=new_content)
+                    self.current_message_info['content'] = new_content.split('\n')
+                    self.save_message_info()
+                except discord.NotFound:
                     current_message = await developer.send(content=new_content)
                     self.current_message_info = {'id': current_message.id, 'content': new_content.split('\n')}
                     self.save_message_info()
+            else:
+                current_message = await developer.send(content=new_content)
+                self.current_message_info = {'id': current_message.id, 'content': new_content.split('\n')}
+                self.save_message_info()
 
-            await asyncio.sleep(self.SLEEP_TIME)  # Wait before the next cycle
+    async def send_loop(self):
+        while True:
+            await self.flush()  # Reuse the logic in the flush method
+            await asyncio.sleep(self.SLEEP_TIME)
