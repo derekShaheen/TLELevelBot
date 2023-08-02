@@ -24,7 +24,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
 
     # Don't issue experience if the member's status is idle
     if member.status == discord.Status.idle and member.voice and member.voice.channel:
-        debug_logger.log("➥ Issued 0xp to {member.name} [idle]. Experience: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
+        debug_logger.log(f"➥ Issued 0xp to {member.name} [idle]. Experience: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
         return
     
     # Add a bonus if the member has boosted the server 
