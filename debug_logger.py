@@ -58,6 +58,7 @@ class DebugLogger:
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
         debug_message = f"{timestamp} {message}"
         self.debug_message_list.append(debug_message)
+        print(debug_message)
         return debug_message
 
     async def get_developer(self):

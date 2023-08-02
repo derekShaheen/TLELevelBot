@@ -16,7 +16,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
     debug_logger = DebugLogger.get_instance()
     user_data = load_user_data(guild.id, member.id)
     if user_data.get('blacklisted'):
-        debug_logger.log("      Issued 0xp to {member.name} [blacklisted].")
+        debug_logger.log("➥ Issued 0xp to {member.name} [blacklisted].")
         return
     
     # Current level
@@ -24,7 +24,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
 
     # Don't issue experience if the member's status is idle
     if member.status == discord.Status.idle and member.voice and member.voice.channel:
-        debug_logger.log("      Issued 0xp to {member.name} [idle]. Experience: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
+        debug_logger.log("➥ Issued 0xp to {member.name} [idle]. Experience: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
         return
     
     # Add a bonus if the member has boosted the server 
@@ -47,7 +47,7 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
     # Adjust roles
     await adjust_roles(guild, new_level, member)
     
-    debug_logger.log(f"Issued {experience_addition}xp to {member.name}. Experience: {round(user_data['experience'] + experience_addition, 2)}, New Level: {new_level}, Prior Level: {current_level}")
+    debug_logger.log(f"➥ Issued {experience_addition}xp to {member.name}. Experience: {round(user_data['experience'] + experience_addition, 2)}, New Level: {new_level}, Prior Level: {current_level}")
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
 
@@ -160,6 +160,7 @@ def cumulative_experience_for_level(target_level: int):
     return experience_cache
 
 async def adjust_roles(guild, new_level, member):
+    debug_logger = DebugLogger.get_instance()
     guild_data = load_guild_data(guild.id)
 
     if 'level_roles' in guild_data:
@@ -177,9 +178,13 @@ async def adjust_roles(guild, new_level, member):
             # Add role if level is less or equal to new level
             if level <= new_level and role not in member.roles:
                 await member.add_roles(role)
+                debug_logger.log(f"Added role id: {role_id} to member id: {member.id}")
             # Remove role if level is above new level
             elif level > new_level and role in member.roles:
                 await member.remove_roles(role)
+                debug_logger.log(f"Removed role id: {role_id} from member id: {member.id}")
+    else:
+        debug_logger.log(f"No 'level_roles' found in guild data for guild id: {guild.id}")
 
 async def log_level_up(ctx, guild, member, new_level):
     if 1 < new_level <= 5:  # Don't log for levels >1 and <=5
@@ -229,3 +234,6 @@ async def log_level_up(ctx, guild, member, new_level):
             save_guild_data(guild.id, guild_data)
         else:
             print(f"Level up log channel not found for guild {guild.id} ({guild.name})")
+    
+    debug_logger = DebugLogger.get_instance()
+    debug_logger.log(f"({guild.name}) {new_levelup_text}")
