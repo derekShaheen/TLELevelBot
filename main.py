@@ -66,32 +66,11 @@ async def voice_activity_tracker():
     if debug:
         debug_logger.log(f"Updating credits")
 
-    config = load_config()
     for guild in bot.guilds:
         for member in guild.members:
-            # Check if the member is connected to a voice channel (but not the AFK channel)
-            if member.voice and member.voice.channel and (member.voice.channel.id != guild.afk_channel.id):
-                # Check if the member is alone in the voice channel
-                is_alone = len(member.voice.channel.members) == 1 or (member.voice.self_mute and member.voice.self_deaf)
-                # Check if all other members are idle
-                all_others_idle = all((other_member.status == discord.Status.idle or (other_member.voice.self_mute and other_member.voice.self_deaf)) for other_member in member.voice.channel.members if other_member != member)
-                
-                experience_gain = 0
+            await process_experience(bot, guild, member, debug, 'voice_activity')
 
-                # Check if the member is streaming
-                if member.voice.self_stream:
-                    experience_gain += config['experience_streaming_bonus']  # Increase experience gain if the user is streaming
-
-                # Calculate the experience gain based on whether the member is alone, with others or with idle members only
-                if is_alone:
-                    experience_gain += config['experience_per_minute_voice'] / 4
-                elif all_others_idle:
-                    experience_gain += config['experience_per_minute_voice'] / 3
-                else:
-                    experience_gain += config['experience_per_minute_voice']
-
-                # Add experience and level up if necessary
-                await process_experience(bot, guild, member, experience_gain, True)
+    if debug:
         debug_logger.log(f"Credit update complete.")
 
 @voice_activity_tracker.before_loop
@@ -111,37 +90,26 @@ async def on_message(message):
         await bot.process_commands(message)
         return
 
-    config = load_config()
-
     # Load or initialize user data
     user_data = load_user_data(message.guild.id, message.author.id)
 
     now = datetime.now()
-
+    
+    # Handle chat timestamp tracking
     # Initialize 'chats_timestamps' if it doesn't exist
     if 'chats_timestamps' not in user_data:
         user_data['chats_timestamps'] = []
 
     # Remove timestamps older than 3 minutes
     user_data['chats_timestamps'] = [timestamp for timestamp in user_data['chats_timestamps'] if now - timestamp < timedelta(minutes=3)]
-    
-    # Calculate experience per chat based on number of messages sent within time limit
-    num_chats = len(user_data['chats_timestamps'])
 
     # Add new timestamp
     user_data['chats_timestamps'].append(now)
-    experience_per_chat = max(1, config['experience_per_chat'] * (1 - num_chats / config['chat_limit']))
 
     # Save user data after updating it
     save_user_data(message.guild.id, message.author.id, user_data)
-
-    # Check if the user is connected to a voice channel
-    if message.author.voice and message.author.voice.channel:
-        # If the user is in a voice channel, penalize the experience
-        experience_per_chat /= 3
-
-    # Add experience and level up if necessary
-    await process_experience(bot, message.guild, message.author, experience_per_chat, debug)
+    # End chat timestamp tracking
+    await process_experience(bot, message.guild, message.author, debug, 'chat', message)
 
     # Process commands after checking for spam and awarding points
     await bot.process_commands(message)

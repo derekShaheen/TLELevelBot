@@ -8,32 +8,58 @@ import discord
 
 import asciichartpy
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from util import get_random_color, get_celebration_emoji, add_commas
 from debug_logger import DebugLogger
 
-async def process_experience(ctx, guild, member, experience_addition, debug = False):
+async def process_experience(ctx, guild, member, debug=False, source=None, message=None):
     debug_logger = DebugLogger.get_instance()
     user_data = load_user_data(guild.id, member.id)
+    config = load_config()
+
     if user_data.get('blacklisted'):
         debug_logger.log("➥ Issued 0r to {member.name} [blacklisted].")
         return
-    
+
     # Current level
     current_level = user_data['level']
 
-    # Don't issue experience if the member's status is idle
-    if member.status == discord.Status.idle and member.voice and member.voice.channel:
-        #debug_logger.log(f"➥ Issued 0r to {member.name} [idle]. Rep: {round(user_data['experience'] + experience_addition, 2)}, Level: {current_level}")
-        experience_addition = 1
-    
-    # Add a bonus if the member has boosted the server 
-    if discord.utils.get(member.roles, name='Server Booster') is not None:
-        experience_addition *= 1.1
+    if source == 'voice_activity':
+        if member.voice and member.voice.channel and (member.voice.channel.id != guild.afk_channel.id):
+            is_alone = len(member.voice.channel.members) == 1 or (member.voice.self_mute and member.voice.self_deaf)
+            all_others_idle = all((other_member.status == discord.Status.idle or (other_member.voice.self_mute and other_member.voice.self_deaf)) for other_member in member.voice.channel.members if other_member != member)
+            experience_gain = 0
+            if member.voice.self_stream:
+                experience_gain += config['experience_streaming_bonus']
+            if is_alone:
+                experience_gain += config['experience_per_minute_voice'] / 4
+            elif all_others_idle:
+                experience_gain += config['experience_per_minute_voice'] / 3
+            else:
+                experience_gain += config['experience_per_minute_voice']
+            
+            # Don't issue experience if the member's status is idle
+            if member.status == discord.Status.idle:
+                experience_gain = 1
+            
+    elif source == 'chat':
+        now = datetime.now()
+        user_data['chats_timestamps'] = [timestamp for timestamp in user_data['chats_timestamps'] if now - timestamp < timedelta(minutes=3)]
+        num_chats = len(user_data['chats_timestamps'])
+        user_data['chats_timestamps'].append(now)
+        experience_gain = max(1, config['experience_per_chat'] * (1 - num_chats / config['chat_limit']))
+        if message.author.voice and message.author.voice.channel:
+            experience_gain /= 3
 
-    experience_addition = round(experience_addition, 2)
-    # Add the experience to the user's total
-    user_data['experience'] = round(user_data['experience'] + experience_addition, 2)
+    else:
+        debug_logger.log(f"Invalid source provided to process_experience: {source}")
+        return
+
+    if discord.utils.get(member.roles, name='Server Booster') is not None:
+        experience_gain *= 1.1
+
+    experience_gain = round(experience_gain, 2)
+    user_data['experience'] = round(user_data['experience'] + experience_gain, 2)
     if user_data['experience'] < 0:
         user_data['experience'] = 0
 
@@ -46,12 +72,13 @@ async def process_experience(ctx, guild, member, experience_addition, debug = Fa
 
     # Adjust roles
     await adjust_roles(guild, new_level, member)
-    
-    debug_logger.log(f"{experience_addition}r ➥ {member.name}. Rep: {add_commas(round(user_data['experience'] + experience_addition, 2))}, New Level: {new_level}, Prior Level: {current_level}")
+
+    debug_logger.log(f"{experience_gain}r ➥ {member.name}. Rep: {add_commas(round(user_data['experience'] + experience_gain, 2))}, New Level: {new_level}, Prior Level: {current_level}")
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
 
     return new_level
+
 
 async def generate_leaderboard(bot, guild_id):
     user_data_files = glob.glob(f'data/{guild_id}/[!guild_data]*.yaml')
