@@ -15,10 +15,7 @@ from __main__ import bot
 async def set_level(interaction: Interaction, member: discord.Member, level: int):
     # Load user data
     user_data = load_user_data(interaction.guild.id, member.id)
-    
-    # Save old level
-    old_level = user_data['level']
-    
+
     # Calculate the experience needed for the target level
     experience_list = cumulative_experience_for_level(level)
     experience = experience_list[-1]  # Get the last item from the list, which corresponds to the cumulative experience needed for the target level
@@ -31,25 +28,25 @@ async def set_level(interaction: Interaction, member: discord.Member, level: int
     save_user_data(interaction.guild.id, member.id, user_data)
 
     # Get the publog channel
-    guild_data = load_guild_data(interaction.guild.id)
-    publog_channel_id = guild_data.get('publog')
-    publog_channel = interaction.guild.get_channel(publog_channel_id)
+    # guild_data = load_guild_data(interaction.guild.id)
+    # publog_channel_id = guild_data.get('publog')
+    # publog_channel = interaction.guild.get_channel(publog_channel_id)
 
     # Send an embed message for leveling up or down
-    embed = discord.Embed(
-        title=f"{member.name}, your level has changed!", 
-        description=f"You are now level {level}!", 
-        color=0x00ff00 if level >= old_level else 0xff0000
-    )
-    if publog_channel:
-        await publog_channel.send(embed=embed)
-    else:
-        print("publog channel not found")
+    # embed = discord.Embed(
+    #     title=f"{member.name}, your level has changed!", 
+    #     description=f"You are now level {level}!", 
+    #     color=0x00ff00 if level >= old_level else 0xff0000
+    # )
+    # if publog_channel:
+    #     await publog_channel.send(embed=embed)
+    # else:
+    #     print("publog channel not found")
 
     # Adjust roles
-    await adjust_roles(interaction.guild, old_level, level, member)
+    await adjust_roles(interaction.guild, level, member)
     
-    await interaction.response.send_message(f"{member.name}'s level has been set to {level}.")
+    await interaction.response.send_message(f"{member.name}'s level has been set to {level}, with rep {experience}.")
 
 
 @bot.tree.command(description='Admin only command. Adjust the reputation of a specific user.')
@@ -60,10 +57,7 @@ async def set_level(interaction: Interaction, member: discord.Member, level: int
 async def setrep(interaction: Interaction, member: discord.Member, reputation: int):
     # Load user data
     user_data = load_user_data(interaction.guild.id, member.id)
-    
-    # Old level
-    old_level = user_data['level']
-    
+
     # Adjust the experience in the user's total
     user_data['experience'] += reputation
     if user_data['experience'] < 0:
@@ -77,25 +71,25 @@ async def setrep(interaction: Interaction, member: discord.Member, reputation: i
     save_user_data(interaction.guild.id, member.id, user_data)
 
     # Adjust roles
-    await adjust_roles(interaction.guild, old_level, new_level, member)
-    
+    await adjust_roles(interaction.guild, new_level, member)
+
     # Get the publog channel
-    guild_data = load_guild_data(interaction.guild.id)
-    publog_channel_id = guild_data.get('publog')
-    publog_channel = interaction.guild.get_channel(publog_channel_id)
+    # guild_data = load_guild_data(interaction.guild.id)
+    # publog_channel_id = guild_data.get('publog')
+    # publog_channel = interaction.guild.get_channel(publog_channel_id)
 
     # Send an embed message for leveling up or down
-    embed = discord.Embed(
-        title=f"{member.name}, your level has changed!", 
-        description=f"You are now level {new_level}!", 
-        color=0x00ff00 if new_level >= old_level else 0xff0000
-    )
-    if publog_channel:
-        await publog_channel.send(embed=embed)
-    else:
-        print("publog channel not found")
+    # embed = discord.Embed(
+    #     title=f"{member.name}, your level has changed!", 
+    #     description=f"You are now level {new_level}!", 
+    #     color=0x00ff00 if new_level >= old_level else 0xff0000
+    # )
+    # if publog_channel:
+    #     await publog_channel.send(embed=embed)
+    # else:
+    #     print("publog channel not found")
 
-    await interaction.response.send_message(f"{abs(reputation)} reputation points have been {'added to' if reputation >= 0 else 'removed from'} {member.name}'s total.")
+    await interaction.response.send_message(f"{abs(reputation)} reputation points have been {'added to' if reputation >= 0 else 'removed from'} {member.name}'s (level {new_level}) total.")
 
 @bot.tree.command(description='Admin only command. Set a role for a specific level.')
 @app_commands.guild_only()

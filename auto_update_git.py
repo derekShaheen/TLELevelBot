@@ -1,4 +1,5 @@
 import requests
+import asyncio
 from _secrets import GITHUB_TOKEN, GITHUB_COMMIT_URL
 from debug_logger import DebugLogger
 
@@ -40,6 +41,7 @@ async def check_version(bot, send_developer_message):
         debug_logger.log(f"[New Version Detected] 🥳 Initiating the update and restart process... [{initial_run_sha}] -> [{check_sha}]")
         try:
             await debug_logger.flush()
+            await asyncio.sleep(1)
             await bot.close()
         except:
             pass
