@@ -13,22 +13,26 @@ from util import get_random_color, get_celebration_emoji, add_commas
 from debug_logger import DebugLogger
 
 async def process_experience(ctx, guild, member, debug=False, source=None, message=None):
+    if source == 'voice_activity':
+        if not member.voice:
+            return 0 # Do not issue experience if the member is not in a voice channel or is in the AFK channel, and the source is voice activity
+        
     debug_logger = DebugLogger.get_instance()
     user_data = load_user_data(guild.id, member.id)
     config = load_config()
 
     if user_data.get('blacklisted'):
         debug_logger.log("➥ Issued 0r to {member.name} [blacklisted].")
-        return
+        return 0
 
     # Current level
     current_level = user_data['level']
-
+    experience_gain = 0
     if source == 'voice_activity':
         if member.voice and member.voice.channel and (member.voice.channel.id != guild.afk_channel.id):
             is_alone = len(member.voice.channel.members) == 1 or (member.voice.self_mute and member.voice.self_deaf)
             all_others_idle = all((other_member.status == discord.Status.idle or (other_member.voice.self_mute and other_member.voice.self_deaf)) for other_member in member.voice.channel.members if other_member != member)
-            experience_gain = 0
+            
             if member.voice.self_stream:
                 experience_gain += config['experience_streaming_bonus']
             if is_alone:
@@ -40,8 +44,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
             
             # Don't issue experience if the member's status is idle
             if member.status == discord.Status.idle:
-                experience_gain = 1
-            
+                experience_gain = 1   
     elif source == 'chat':
         now = datetime.now()
         user_data['chats_timestamps'] = [timestamp for timestamp in user_data['chats_timestamps'] if now - timestamp < timedelta(minutes=3)]
@@ -50,10 +53,13 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
         experience_gain = max(1, config['experience_per_chat'] * (1 - num_chats / config['chat_limit']))
         if message.author.voice and message.author.voice.channel:
             experience_gain /= 3
-
     else:
         debug_logger.log(f"Invalid source provided to process_experience: {source}")
-        return
+        return 0
+
+    # No changes, return
+    if experience_gain == 0:
+        return current_level
 
     if discord.utils.get(member.roles, name='Server Booster') is not None:
         experience_gain *= 1.1
