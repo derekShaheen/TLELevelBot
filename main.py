@@ -51,8 +51,6 @@ async def on_ready():
             guild_data_for_logging = {k: v for k, v in guild_data.items() if k != 'levelup_log'}
             debug_logger.log(f"Guild {guild.name} data: {guild_data_for_logging}")
 
-    auto_update_git.set_initial_run_sha()
-
     voice_activity_tracker.start()
     update_leaderboard_task.start()
 
@@ -238,10 +236,12 @@ async def sync(
 
 @tasks.loop(seconds=30)
 async def check_version():
-    await auto_update_git.check_version(bot, send_developer_message)
+    await auto_update_git.check_version(bot)
 
 @check_version.before_loop
 async def before_check_version():
+    auto_update_git.set_initial_run_sha()
+    auto_update_git.check_version(bot) # Perform initial check
     initial_delay = get_initial_delay(interval=timedelta(seconds=30))
     print('Version Check loop scheduled for: {}'.format(initial_delay))
     await asyncio.sleep(initial_delay)

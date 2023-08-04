@@ -41,7 +41,12 @@ async def show_rep_util(interaction: discord.Interaction, member: discord.Member
     # Load all users' data and find the rank of the user
     all_user_data = load_all_user_data(interaction.guild.id)
     user_rank = [i for i, user in enumerate(all_user_data) if user[0] == str(member.id)][0] + 1
-
+    if 10 <= user_rank <= 20:
+        suffix = 'th'
+    else:
+        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(user_rank % 10, 'th')
+    user_rank = f"{user_rank}{suffix}"
+    
     # Capitalize the first letter of the username
     username = member.name[0].upper() + member.name[1:]
 
@@ -54,7 +59,7 @@ async def show_rep_util(interaction: discord.Interaction, member: discord.Member
     embed = discord.Embed(
         title=f"{username}'s Reputation Information",
         description='',
-        color=get_random_color()
+        color=member.color
     )
 
     avatar_url = str(member.avatar.url) if member.avatar else str(member.default_avatar.url)
@@ -63,7 +68,7 @@ async def show_rep_util(interaction: discord.Interaction, member: discord.Member
     # Add fields to the embed
     embed.add_field(name="Reputation Rank", value=user_rank, inline=True)  # User rank
     embed.add_field(name="Level", value=user_data['level'], inline=True)
-    embed.add_field(name="Approx Rep Score", value=add_commas(experience), inline=True)  # Use the approximated experience
+    embed.add_field(name="Actual Score", value=f"~{add_commas(experience)}", inline=True)  # Use the approximated experience
 
     # Send the embed with the interaction response
     await interaction.response.send_message(embed=embed)
