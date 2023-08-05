@@ -64,7 +64,7 @@ def get_initial_delay(target_time: time = None, interval: timedelta = None) -> f
 def get_random_color(noReds = False):
     if noReds:
         color_list = [
-            "default", "teal", "green", "blue", "purple", "magenta", "gold", "blurple",
+            "teal", "green", "blue", "purple", "magenta", "gold", "blurple",
             # "dark_teal", "dark_green", "dark_blue", "dark_purple",
             # "dark_magenta", "dark_gold", "dark_orange",
             # "lighter_grey", "dark_grey", "light_grey", "darker_grey", "greyple"

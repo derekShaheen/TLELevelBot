@@ -271,7 +271,7 @@ async def log_level_up(ctx, guild, member, new_level):
     if new_level == 6:
         embed = discord.Embed(
             title=f"{member.name}, you have reached level 6!", 
-            description=f"{member.mention} Welcome to the reputation system! You gain reputation by participating in the server. We hope you enjoy your stay!", 
+            description=f"{member.mention} Welcome to the reputation system! {get_celebration_emoji()} You gain reputation by participating in the server, and you're already level 6! We hope you enjoy your stay!", 
             color=get_random_color(True)
         )
         if levelup_log_channel:
