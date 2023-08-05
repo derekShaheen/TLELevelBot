@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 from configManager import load_guild_data, save_guild_data, load_user_data, save_user_data
-from levelSystem import calculate_level, adjust_roles, cumulative_experience_for_level
+from levelSystem import calculate_level, adjust_roles, cumulative_experience_for_level, log_level_up
 from util import send_embed
 from discord import Interaction
 from discord import app_commands
@@ -15,7 +15,7 @@ from __main__ import bot
 async def set_level(interaction: Interaction, member: discord.Member, level: int):
     # Load user data
     user_data = load_user_data(interaction.guild.id, member.id)
-
+    current_level = user_data['level']
     # Calculate the experience needed for the target level
     experience_list = cumulative_experience_for_level(level)
     experience = experience_list[-1]  # Get the last item from the list, which corresponds to the cumulative experience needed for the target level
@@ -27,36 +27,24 @@ async def set_level(interaction: Interaction, member: discord.Member, level: int
     # Save user data
     save_user_data(interaction.guild.id, member.id, user_data)
 
-    # Get the publog channel
-    # guild_data = load_guild_data(interaction.guild.id)
-    # publog_channel_id = guild_data.get('publog')
-    # publog_channel = interaction.guild.get_channel(publog_channel_id)
-
-    # Send an embed message for leveling up or down
-    # embed = discord.Embed(
-    #     title=f"{member.name}, your level has changed!", 
-    #     description=f"You are now level {level}!", 
-    #     color=0x00ff00 if level >= old_level else 0xff0000
-    # )
-    # if publog_channel:
-    #     await publog_channel.send(embed=embed)
-    # else:
-    #     print("publog channel not found")
-
     # Adjust roles
     await adjust_roles(interaction.guild, level, member)
+
+    if current_level != level:
+        await log_level_up(interaction, interaction.guild, member, level)
     
     await interaction.response.send_message(f"{member.name}'s level has been set to {level}, with rep {experience}.")
 
 
-@bot.tree.command(description='Admin only command. Adjust the reputation of a specific user.')
+@bot.tree.command(description='Admin only command. Adjust the reputation (relative to the current rep) of a specific user.')
 @app_commands.guild_only()
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(member='The member whose reputation you want to adjust.')
-@app_commands.describe(reputation='The reputation to adjust for the member.')
-async def set_rep(interaction: Interaction, member: discord.Member, reputation: int):
+@app_commands.describe(reputation='The reputation to adjust for the member (relative to the current rep).')
+async def adjust_rep(interaction: Interaction, member: discord.Member, reputation: int):
     # Load user data
     user_data = load_user_data(interaction.guild.id, member.id)
+    current_level = user_data['level']
 
     # Adjust the experience in the user's total
     user_data['experience'] += reputation
@@ -73,21 +61,38 @@ async def set_rep(interaction: Interaction, member: discord.Member, reputation: 
     # Adjust roles
     await adjust_roles(interaction.guild, new_level, member)
 
-    # Get the publog channel
-    # guild_data = load_guild_data(interaction.guild.id)
-    # publog_channel_id = guild_data.get('publog')
-    # publog_channel = interaction.guild.get_channel(publog_channel_id)
+    if current_level != new_level:
+        await log_level_up(interaction, interaction.guild, member, new_level)
 
-    # Send an embed message for leveling up or down
-    # embed = discord.Embed(
-    #     title=f"{member.name}, your level has changed!", 
-    #     description=f"You are now level {new_level}!", 
-    #     color=0x00ff00 if new_level >= old_level else 0xff0000
-    # )
-    # if publog_channel:
-    #     await publog_channel.send(embed=embed)
-    # else:
-    #     print("publog channel not found")
+    await interaction.response.send_message(f"{abs(reputation)} reputation points have been {'added to' if reputation >= 0 else 'removed from'} {member.name}'s (level {new_level}) total.")
+
+@bot.tree.command(description='Admin only command. Set the reputation of a specific user to a specific amount.')
+@app_commands.guild_only()
+@app_commands.checks.has_permissions(administrator=True)
+@app_commands.describe(member='The member whose reputation you want to set.')
+@app_commands.describe(reputation='The reputation to set for the member.')
+async def set_rep(interaction: Interaction, member: discord.Member, reputation: int):
+    # Load user data
+    user_data = load_user_data(interaction.guild.id, member.id)
+    current_level = user_data['level']
+
+    # Adjust the experience in the user's total
+    user_data['experience'] = reputation
+    if user_data['experience'] < 0:
+        user_data['experience'] = 0
+
+    # Calculate new level
+    new_level = calculate_level(user_data['experience'])
+    user_data['level'] = new_level
+
+    # Save user data
+    save_user_data(interaction.guild.id, member.id, user_data)
+
+    # Adjust roles
+    await adjust_roles(interaction.guild, new_level, member)
+
+    if current_level != new_level:
+        await log_level_up(interaction, interaction.guild, member, new_level)
 
     await interaction.response.send_message(f"{abs(reputation)} reputation points have been {'added to' if reputation >= 0 else 'removed from'} {member.name}'s (level {new_level}) total.")
 
