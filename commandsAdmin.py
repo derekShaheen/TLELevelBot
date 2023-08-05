@@ -54,7 +54,7 @@ async def set_level(interaction: Interaction, member: discord.Member, level: int
 @app_commands.checks.has_permissions(administrator=True)
 @app_commands.describe(member='The member whose reputation you want to adjust.')
 @app_commands.describe(reputation='The reputation to adjust for the member.')
-async def setrep(interaction: Interaction, member: discord.Member, reputation: int):
+async def set_rep(interaction: Interaction, member: discord.Member, reputation: int):
     # Load user data
     user_data = load_user_data(interaction.guild.id, member.id)
 
