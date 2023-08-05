@@ -261,7 +261,7 @@ async def log_level_up(ctx, guild, member, new_level):
     levelup_embed.add_field(name='How to check your rank:', value=check_rank_instructions, inline=False)
 
     for timestamp, log_text in guild_data['levelup_log']:
-        levelup_embed.add_field(name=timestamp + ' ' + log_text, value=welcome_text', inline=False)
+        levelup_embed.add_field(name=timestamp + ' ' + log_text, value=welcome_text, inline=False)
 
     if levelup_log_message:  # If a message already exists, edit it
         await levelup_log_message.edit(embed=levelup_embed)
