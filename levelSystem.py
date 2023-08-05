@@ -220,7 +220,7 @@ async def adjust_roles(guild, new_level, member):
         debug_logger.log(f"No 'level_roles' found in guild data for guild id: {guild.id}")
 
 async def log_level_up(ctx, guild, member, new_level):
-    if new_level <= 5:  # Don't log for levels <=5
+    if new_level <= 5:  # Don't log for levels >1 and <=5
         return
 
     guild_data = load_guild_data(guild.id)
@@ -239,11 +239,6 @@ async def log_level_up(ctx, guild, member, new_level):
     member_name = member.name[0].upper() + member.name[1:]  # Capitalize member's name
     new_levelup_text = f"{member_name} is now level {new_level}! {get_celebration_emoji()}"
 
-    if new_level == 6:
-        welcome_text = f"{member.mention}, welcome to the reputation system!"
-    else:
-        welcome_text = '\u200b'
-
     # If the levelup_log exists in guild_data, append the new level up text to the list
     # and slice the list to keep only the last 10 elements. If it does not exist, initialize it
     guild_data.setdefault('levelup_log', [])
@@ -261,7 +256,7 @@ async def log_level_up(ctx, guild, member, new_level):
     levelup_embed.add_field(name='How to check your rank:', value=check_rank_instructions, inline=False)
 
     for timestamp, log_text in guild_data['levelup_log']:
-        levelup_embed.add_field(name=timestamp + ' ' + log_text, value=welcome_text, inline=False)
+        levelup_embed.add_field(name=timestamp + ' ' + log_text, value='\u200b', inline=False)
 
     if levelup_log_message:  # If a message already exists, edit it
         await levelup_log_message.edit(embed=levelup_embed)
@@ -270,6 +265,17 @@ async def log_level_up(ctx, guild, member, new_level):
             levelup_log_message = await levelup_log_channel.send(embed=levelup_embed)
             guild_data['levelup_log_message'] = levelup_log_message.id
             save_guild_data(guild.id, guild_data)
+        else:
+            print(f"Level up log channel not found for guild {guild.id} ({guild.name})")
+
+    if new_level == 6:
+        embed = discord.Embed(
+            title=f"{member.name}, you have reached level 6!", 
+            description=f"{member.mention} Welcome to the reputation system! You gain reputation by participating in the server. We hope you enjoy your stay!", 
+            color=get_random_color(True)
+        )
+        if levelup_log_channel:
+            await levelup_log_channel.send(embed=embed)
         else:
             print(f"Level up log channel not found for guild {guild.id} ({guild.name})")
     

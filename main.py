@@ -241,7 +241,7 @@ async def check_version():
 @check_version.before_loop
 async def before_check_version():
     auto_update_git.set_initial_run_sha()
-    auto_update_git.check_version(bot) # Perform initial check
+    await auto_update_git.check_version(bot) # Perform initial check
     initial_delay = get_initial_delay(interval=timedelta(seconds=30))
     print('Version Check loop scheduled for: {}'.format(initial_delay))
     await asyncio.sleep(initial_delay)
