@@ -145,7 +145,7 @@ async def generate_leaderboard(bot, guild_id):
     height = min(max_level - next_lower_level, 16)
 
     # Normalize and scale the levels
-    scaled_leaderboard_levels = normalize_and_scale(stretched_leaderboard_levels, height)
+    scaled_leaderboard_levels = normalize_and_scale(stretched_leaderboard_levels, max_level)
 
     # Generate ASCII plot for levels
     ascii_plot = asciichartpy.plot(scaled_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
