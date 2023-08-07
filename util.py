@@ -61,8 +61,8 @@ def get_initial_delay(target_time: time = None, interval: timedelta = None) -> f
 
     return (next_run - now).total_seconds()
 
-def get_random_color(noReds = False):
-    if noReds:
+def get_random_color(brightOnly = False):
+    if brightOnly:
         color_list = [
             "teal", "green", "blue", "purple", "magenta", "gold", "blurple",
             # "dark_teal", "dark_green", "dark_blue", "dark_purple",
@@ -97,7 +97,7 @@ async def send_developer_message(client, title, description, color, file=None, f
         await send_embed(developer, title, description, color, None, fields)
 
 def get_celebration_emoji():
-    emojis = ['🎉', '🥳', '🎊', '👏', '💪', '🚀', '🔥', '🙌', '🥂', '🍾', '👀', '🎈', '🎇', '🎆', '🤩', '🏆', '🥇', '🥈', '🥉', '💥', '🌟', '✨', '💫', '⭐', '👑', '🎁', '🎖️', '🏅', '📣', '📢', '🤘', '🤟', '👍']
+    emojis = ['🎉', '🥳', '🎊', '👏', '💪', '🚀', '🔥', '🙌', '🥂', '🍾', '👀', '🎈', '🎇', '🎆', '🤩', '🏆', '💥', '🌟', '✨', '💫', '⭐', '👑', '🎁', '🎖️', '🏅', '📣', '📢', '🤘', '🤟', '👍']
     return random.choice(emojis)
 
 def add_commas(number):
