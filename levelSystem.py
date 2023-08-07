@@ -85,23 +85,6 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
 
     return new_level
 
-def normalize_and_scale(values, scale):
-    # Get min and max of the values
-    min_val = min(values)
-    max_val = max(values)
-    
-    # If the difference is zero, prevent division by zero
-    if max_val == min_val:
-        max_val += 1
-    
-    # Normalize to [0, 1]
-    normalized_values = [(value - min_val) / (max_val - min_val) for value in values]
-    
-    # Scale to the desired height
-    scaled_values = [round(scale * value) for value in normalized_values]
-    
-    return scaled_values
-
 async def generate_leaderboard(bot, guild_id):
     user_data_files = glob.glob(f'data/{guild_id}/[!guild_data]*.yaml')
 
@@ -137,18 +120,21 @@ async def generate_leaderboard(bot, guild_id):
         max_xp_len = max(max_xp_len, len(str(round(xp))))  # Track the maximum XP length
 
     # Find the next level that's lower than min_level
-    stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
+    #stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
     next_lower_level = next((user_data['level'] for user_id, user_data in user_data_list[9:] if user_data['level'] < min_level), min_level)
-    stretched_leaderboard_levels.append(next_lower_level)
+    #stretched_leaderboard_levels.append(next_lower_level)
 
     # Calculate height
     height = min(max_level - next_lower_level, 16)
 
-    # Normalize and scale the levels
-    scaled_leaderboard_levels = normalize_and_scale(stretched_leaderboard_levels, max_level)
+    # Adjust leaderboard levels for the defined height while maintaining integers
+    scale_factor = height / (max_level - min_level) if max_level - min_level > height else 1
+    adjusted_leaderboard_levels = [round((level - min_level) * scale_factor + min_level) for level in leaderboard_levels]
+    stretched_leaderboard_levels = [lvl for lvl in adjusted_leaderboard_levels for _ in range(3)]
+    stretched_leaderboard_levels.append(next_lower_level)
 
     # Generate ASCII plot for levels
-    ascii_plot = asciichartpy.plot(scaled_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
+    ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
 
     # Add label
     ascii_plot = ascii_plot + '\n\n\t\tTop 9 Users by Level'
