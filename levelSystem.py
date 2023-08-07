@@ -85,6 +85,22 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
 
     return new_level
 
+def normalize_and_scale(values, scale):
+    # Get min and max of the values
+    min_val = min(values)
+    max_val = max(values)
+    
+    # If the difference is zero, prevent division by zero
+    if max_val == min_val:
+        max_val += 1
+    
+    # Normalize to [0, 1]
+    normalized_values = [(value - min_val) / (max_val - min_val) for value in values]
+    
+    # Scale to the desired height
+    scaled_values = [round(scale * value) for value in normalized_values]
+    
+    return scaled_values
 
 async def generate_leaderboard(bot, guild_id):
     user_data_files = glob.glob(f'data/{guild_id}/[!guild_data]*.yaml')
@@ -128,8 +144,11 @@ async def generate_leaderboard(bot, guild_id):
     # Calculate height
     height = min(max_level - next_lower_level, 16)
 
+    # Normalize and scale the levels
+    scaled_leaderboard_levels = normalize_and_scale(stretched_leaderboard_levels, height)
+
     # Generate ASCII plot for levels
-    ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
+    ascii_plot = asciichartpy.plot(scaled_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
 
     # Add label
     ascii_plot = ascii_plot + '\n\n\t\tTop 9 Users by Level'
