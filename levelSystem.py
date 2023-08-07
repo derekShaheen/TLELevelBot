@@ -120,18 +120,12 @@ async def generate_leaderboard(bot, guild_id):
         max_xp_len = max(max_xp_len, len(str(round(xp))))  # Track the maximum XP length
 
     # Find the next level that's lower than min_level
-    #stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
+    stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
     next_lower_level = next((user_data['level'] for user_id, user_data in user_data_list[9:] if user_data['level'] < min_level), min_level)
-    #stretched_leaderboard_levels.append(next_lower_level)
+    stretched_leaderboard_levels.append(next_lower_level)
 
     # Calculate height
     height = min(max_level - next_lower_level, 16)
-
-    # Adjust leaderboard levels for the defined height while maintaining integers
-    scale_factor = height / (max_level - min_level) if max_level - min_level > height else 1
-    adjusted_leaderboard_levels = [round((level - min_level) * scale_factor + min_level) for level in leaderboard_levels]
-    stretched_leaderboard_levels = [lvl for lvl in adjusted_leaderboard_levels for _ in range(3)]
-    stretched_leaderboard_levels.append(next_lower_level)
 
     # Generate ASCII plot for levels
     ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
