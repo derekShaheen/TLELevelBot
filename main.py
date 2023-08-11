@@ -199,8 +199,8 @@ async def update_leaderboard_command(interaction: discord.Interaction, choices: 
     await interaction.response.defer()  # Acknowledge the command, but don't send a response yet
 
     if choices.value == 1:  # If Full Board is chosen
-        leaderboard = await generate_leaderboard(interaction.bot, interaction.guild_id, choices=True)
-        await interaction.followup.send(leaderboard)  # Send the full leaderboard as a response
+        leaderboard = await generate_leaderboard(interaction.bot, interaction.guild_id, True)
+        await interaction.followup.send(f"```{leaderboard}```")  # Send the full leaderboard as a response
 
     else:  # If Default is chosen
         await update_leaderboard()  # Update the leaderboard
