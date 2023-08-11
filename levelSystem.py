@@ -85,7 +85,11 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
 
     return new_level
 
-async def generate_leaderboard(bot, guild_id):
+async def generate_leaderboard(bot, guild_id, full_board = False):
+    leader_depth = 9
+    if full_board:
+        leader_depth = 999
+
     user_data_files = glob.glob(f'data/{guild_id}/[!guild_data]*.yaml')
 
     user_data_list = []
@@ -102,7 +106,7 @@ async def generate_leaderboard(bot, guild_id):
     max_level = 0
     max_username_len = 0
     rank_emoji = ["🥇", "🥈", "🥉"] + ["🏅"]*2 + ["🔹"]*2 + ["🔸"]*2 + [""]*10
-    for rank, (user_id, user_data) in enumerate(user_data_list[:9], start=1):
+    for rank, (user_id, user_data) in enumerate(user_data_list[:leader_depth], start=1):
         user = await bot.fetch_user(int(user_id))
         username = user.display_name or user.name
         username = username[0].upper() + username[1:]  # Capitalize the first letter
@@ -115,26 +119,34 @@ async def generate_leaderboard(bot, guild_id):
 
     max_level_len = 0
     max_xp_len = 0
-    for _, level, xp in leaderboard_data[:9]:
+    for _, level, xp in leaderboard_data[:leader_depth]:
         max_level_len = max(max_level_len, len(str(level)))  # Track the maximum level length
         max_xp_len = max(max_xp_len, len(str(round(xp))))  # Track the maximum XP length
 
     # Find the next level that's lower than min_level
     stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
-    next_lower_level = next((user_data['level'] for user_id, user_data in user_data_list[9:] if user_data['level'] < min_level), min_level)
-    stretched_leaderboard_levels.append(next_lower_level)
+    if not full_board:
+        next_lower_level = next((user_data['level'] for user_id, user_data in user_data_list[leader_depth:] if user_data['level'] < min_level), min_level)
+        stretched_leaderboard_levels.append(next_lower_level)
 
     # Calculate height
-    height = min(max_level - next_lower_level, 16)
+    if not full_board:
+        height = min(max_level - next_lower_level, 16)
 
     # Generate ASCII plot for levels
-    ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
+    if full_board:
+        ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}'})
+    else:
+        ascii_plot = asciichartpy.plot(stretched_leaderboard_levels, {'format': '{:>6.0f}', 'height': height})
 
     # Add label
-    ascii_plot = ascii_plot + '\n\n\t\tTop 9 Users by Level'
+    if full_board:
+        ascii_plot = ascii_plot + '\n\n\t\tTop Users by Level'
+    else:
+        ascii_plot = ascii_plot + '\n\n\t\tTop 9 Users by Level'
 
     # Add user labels to the plot, pad usernames to align level and XP info
-    for username, level, xp in leaderboard_data[:9]:
+    for username, level, xp in leaderboard_data[:leader_depth]:
         level_str = str(level).rjust(max_level_len)
         xp_str = str(round(xp)).rjust(max_xp_len)
         #ascii_plot += '\n' + username.ljust(max_username_len) + f'  (Level: {level_str} Rep: {xp_str})'
