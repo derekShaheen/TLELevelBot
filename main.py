@@ -190,16 +190,16 @@ async def clear_channel_except(guild_id: int, channel_id: int):
     description='Admin only command. Update the leaderboard. Optionally return the full board back to the user.',
 )
 @app_commands.choices(choices=[
-    app_commands.Choice(name="Full Board", value=True),
-    app_commands.Choice(name="Default", value=False),
+    app_commands.Choice(name="Full Board", value=1),
+    app_commands.Choice(name="Default", value=0),
 ])
 @app_commands.checks.cooldown(1, 5.0, key=lambda i: (i.guild_id, i.user.id))
 @app_commands.checks.has_permissions(administrator=True)
-async def update_leaderboard_command(interaction: discord.Interaction, full_board: app_commands.Choice[bool]):
+async def update_leaderboard_command(interaction: discord.Interaction, choices: app_commands.Choice[int]):
     await interaction.response.defer()  # Acknowledge the command, but don't send a response yet
 
-    if full_board.value:  # If Full Board is chosen
-        leaderboard = await generate_leaderboard(interaction.bot, interaction.guild_id, full_board=True)
+    if choices.value == 1:  # If Full Board is chosen
+        leaderboard = await generate_leaderboard(interaction.bot, interaction.guild_id, choices=True)
         await interaction.followup.send(leaderboard)  # Send the full leaderboard as a response
 
     else:  # If Default is chosen
