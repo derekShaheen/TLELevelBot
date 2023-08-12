@@ -107,6 +107,10 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
     max_username_len = 0
     rank_emoji = ["🥇", "🥈", "🥉"] + ["🏅"]*2 + ["🔹"]*2 + ["🔸"]*2
     for rank, (user_id, user_data) in enumerate(user_data_list[:leader_depth], start=1):
+        #Skip user if they have less than 5 experience
+        if user_data["experience"] >= 5:
+            continue
+
         user = await bot.fetch_user(int(user_id))
         username = user.display_name or user.name
         username = username[0].upper() + username[1:]  # Capitalize the first letter
@@ -116,8 +120,12 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
             emoji = rank_emoji[rank-1]
         else:
             emoji = "➖"
+        
+        if not full_board:
+            username = f'{emoji} {username}'
+        else:
+            username = f'{emoji} {rank}. {username}'
 
-        username = f'{emoji} {username}'
         max_username_len = max(max_username_len, len(username))  # Track the maximum username length
         leaderboard_data.append((username, user_data["level"], user_data["experience"]))
         leaderboard_levels.append(user_data['level'])
@@ -130,9 +138,13 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
         max_level_len = max(max_level_len, len(str(level)))  # Track the maximum level length
         max_xp_len = max(max_xp_len, len(str(round(xp))))  # Track the maximum XP length
 
-    # Find the next level that's lower than min_level
-    stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
     if not full_board:
+        stretched_leaderboard_levels = [lvl for lvl in leaderboard_levels for _ in range(3)]
+    else:
+        stretched_leaderboard_levels = leaderboard_levels
+
+    if not full_board:
+        # Find the next level that's lower than min_level
         next_lower_level = next((user_data['level'] for user_id, user_data in user_data_list[leader_depth:] if user_data['level'] < min_level), min_level)
         stretched_leaderboard_levels.append(next_lower_level)
 
@@ -156,8 +168,10 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
     for username, level, xp in leaderboard_data[:leader_depth]:
         level_str = str(level).rjust(max_level_len)
         xp_str = str(round(xp)).rjust(max_xp_len)
-        #ascii_plot += '\n' + username.ljust(max_username_len) + f'  (Level: {level_str} Rep: {xp_str})'
-        ascii_plot += '\n' + username.ljust(max_username_len) + f'  Rep Level: {level_str}'
+        if not full_board:
+            ascii_plot += '\n' + username.ljust(max_username_len) + f'  Rep Level: {level_str}'
+        else:
+            ascii_plot += '\n' + username.ljust(max_username_len) + f'  (Level: {level_str} Rep: {xp_str})'
 
 
     # Add label
