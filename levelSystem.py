@@ -108,7 +108,7 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
     rank_emoji = ["🥇", "🥈", "🥉"] + ["🏅"]*2 + ["🔹"]*2 + ["🔸"]*2
     for rank, (user_id, user_data) in enumerate(user_data_list[:leader_depth], start=1):
         #Skip user if they have less than 5 experience
-        if user_data["experience"] >= 5:
+        if user_data["experience"] <= 5:
             continue
 
         user = await bot.fetch_user(int(user_id))
