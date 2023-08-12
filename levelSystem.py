@@ -105,12 +105,19 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
     min_level = 9999
     max_level = 0
     max_username_len = 0
-    rank_emoji = ["🥇", "🥈", "🥉"] + ["🏅"]*2 + ["🔹"]*2 + ["🔸"]*2 + [""]*10
+    rank_emoji = ["🥇", "🥈", "🥉"] + ["🏅"]*2 + ["🔹"]*2 + ["🔸"]*2
     for rank, (user_id, user_data) in enumerate(user_data_list[:leader_depth], start=1):
         user = await bot.fetch_user(int(user_id))
         username = user.display_name or user.name
         username = username[0].upper() + username[1:]  # Capitalize the first letter
-        username = f'{rank_emoji[min(rank-1, len(rank_emoji)-1)]} {username}'
+
+        # Check if rank exceeds the length of rank_emoji
+        if rank <= len(rank_emoji):
+            emoji = rank_emoji[rank-1]
+        else:
+            emoji = "➖"
+
+        username = f'{emoji} {username}'
         max_username_len = max(max_username_len, len(username))  # Track the maximum username length
         leaderboard_data.append((username, user_data["level"], user_data["experience"]))
         leaderboard_levels.append(user_data['level'])
