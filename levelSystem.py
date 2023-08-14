@@ -100,6 +100,8 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
 
     user_data_list.sort(key=lambda item: item[1]['experience'], reverse=True)
 
+    guild = bot.get_guild(guild_id)
+
     leaderboard_data = []
     leaderboard_levels = []
     min_level = 9999
@@ -111,8 +113,8 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
         if user_data["experience"] <= 5:
             continue
 
-        user = await bot.fetch_user(int(user_id))
-        username = user.display_name or user.name
+        user = await guild.fetch_user(int(user_id))# -- PULL FROM GUILD
+        username = user.display_name or user.nick or user.name
         username = username[0].upper() + username[1:]  # Capitalize the first letter
 
         # Check if rank exceeds the length of rank_emoji
