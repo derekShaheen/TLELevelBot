@@ -115,6 +115,8 @@ async def set_level_role(interaction: Interaction, level: int, role: discord.Rol
             del guild_data['level_roles'][str(level)]
             save_guild_data(interaction.guild.id, guild_data)
             await interaction.response.send_message(f"The role for level {level} has been removed.")
+        else:
+            await interaction.response.send_message(f"No role found for this level.")
     else:
         # Add the level-role mapping
         guild_data['level_roles'][str(level)] = role.id
