@@ -272,7 +272,8 @@ async def log_level_up(ctx, guild, member, new_level):
             return
 
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M]")
-        member_name = member.name[0].upper() + member.name[1:]  # Capitalize member's name
+        member_name = member.display_name or member.nick or member.name  # Capitalize member's name
+        member_name = member_name.title()
         new_levelup_text = f"{member_name} is now level {new_level}! {get_celebration_emoji()}"
 
         # If the levelup_log exists in guild_data, append the new level up text to the list
