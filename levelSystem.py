@@ -113,7 +113,7 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
         if user_data["experience"] <= 5:
             continue
 
-        user = await guild.fetch_user(int(user_id))# -- PULL FROM GUILD
+        user = await guild.fetch_member(int(user_id))# -- PULL FROM GUILD
         username = user.display_name or user.nick or user.name
         username = username[0].upper() + username[1:]  # Capitalize the first letter
 
