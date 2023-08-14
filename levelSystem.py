@@ -254,10 +254,8 @@ async def adjust_roles(guild, new_level, member):
         debug_logger.log(f"No 'level_roles' found in guild data for guild id: {guild.id}")
 
 async def log_level_up(ctx, guild, member, new_level):
-    if new_level <= 5:  # Don't log for levels >1 and <=5
-        return
-
     guild_data = load_guild_data(guild.id)
+
     levelup_log_channel_id = guild_data.get('publog')
     levelup_log_message_id = guild_data.get('levelup_log_message')
     levelup_log_channel = ctx.get_channel(levelup_log_channel_id) if levelup_log_channel_id else None
@@ -269,16 +267,20 @@ async def log_level_up(ctx, guild, member, new_level):
         except discord.NotFound:
             levelup_log_message_id = None  # Reset the message ID if the message was not found
 
-    timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M]")
-    member_name = member.name[0].upper() + member.name[1:]  # Capitalize member's name
-    new_levelup_text = f"{member_name} is now level {new_level}! {get_celebration_emoji()}"
+    if member is not None:
+        if new_level <= 5:  # Don't log for levels >1 and <=5
+            return
 
-    # If the levelup_log exists in guild_data, append the new level up text to the list
-    # and slice the list to keep only the last 10 elements. If it does not exist, initialize it
-    guild_data.setdefault('levelup_log', [])
-    guild_data['levelup_log'].append((timestamp, new_levelup_text))
-    guild_data['levelup_log'] = guild_data['levelup_log'][-6:]
-    save_guild_data(guild.id, guild_data)
+        timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M]")
+        member_name = member.name[0].upper() + member.name[1:]  # Capitalize member's name
+        new_levelup_text = f"{member_name} is now level {new_level}! {get_celebration_emoji()}"
+
+        # If the levelup_log exists in guild_data, append the new level up text to the list
+        # and slice the list to keep only the last 10 elements. If it does not exist, initialize it
+        guild_data.setdefault('levelup_log', [])
+        guild_data['levelup_log'].append((timestamp, new_levelup_text))
+        guild_data['levelup_log'] = guild_data['levelup_log'][-6:]
+        save_guild_data(guild.id, guild_data)
 
     levelup_embed = discord.Embed(
         title="Reputation Level Up Log",
@@ -302,7 +304,7 @@ async def log_level_up(ctx, guild, member, new_level):
         else:
             print(f"Level up log channel not found for guild {guild.id} ({guild.name})")
 
-    if new_level == 6:
+    if member is not None and new_level == 6:
         username = member.display_name or member.name
         username = username[0].upper() + username[1:] 
 
@@ -317,4 +319,7 @@ async def log_level_up(ctx, guild, member, new_level):
             print(f"Level up log channel not found for guild {guild.id} ({guild.name})")
     
     debug_logger = DebugLogger.get_instance()
-    debug_logger.log(f"({guild.name}) {new_levelup_text}")
+    if member is not None:
+        debug_logger.log(f"({guild.name}) {new_levelup_text}")
+    else:
+        debug_logger.log(f"({guild.name}) Startup message sent/updated.")

@@ -22,7 +22,7 @@ from typing import Literal, Optional
 
 import _secrets
 from configManager import load_user_data, load_config, save_user_data, load_guild_data, save_guild_data
-from levelSystem import process_experience, generate_leaderboard
+from levelSystem import process_experience, generate_leaderboard, log_level_up
 from util import get_initial_delay, get_random_color, send_developer_message
 from debug_logger import DebugLogger
 import auto_update_git
@@ -50,12 +50,13 @@ async def on_ready():
             # Remove 'levelup_log' from data for logging
             guild_data_for_logging = {k: v for k, v in guild_data.items() if k != 'levelup_log'}
             debug_logger.log(f"Guild {guild.name} data: {guild_data_for_logging}")
+            await log_level_up(bot, guild, None, 0)
 
     voice_activity_tracker.start()
     update_leaderboard_task.start()
 
     check_version.start()
-
+    
 #    await update_leaderboard()
 #    await check_version()
 
