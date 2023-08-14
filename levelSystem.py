@@ -115,7 +115,7 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
 
         user = await guild.fetch_member(int(user_id))# -- PULL FROM GUILD
         username = user.display_name or user.nick or user.name
-        username = username[0].upper() + username[1:]  # Capitalize the first letter
+        username = username.title()  # Titlize the username
 
         # Check if rank exceeds the length of rank_emoji
         if rank <= len(rank_emoji):
