@@ -10,7 +10,6 @@ import asciichartpy
 import pandas as pd
 from datetime import datetime, timedelta
 from util import get_random_color, get_celebration_emoji, add_commas
-from commandsUser import show_rep_util
 from debug_logger import DebugLogger
 
 async def process_experience(ctx, guild, member, debug=False, source=None, message=None):
@@ -254,15 +253,6 @@ async def adjust_roles(guild, new_level, member):
     else:
         debug_logger.log(f"No 'level_roles' found in guild data for guild id: {guild.id}")
 
-class RepView(discord.ui.View):
-    def __init__(self, member):
-        super().__init__(timeout=None)
-        self.member = member
-
-    @discord.ui.button(label="Check my Rep", style=discord.ButtonStyle.primary)
-    async def check_rep_button(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await show_rep_util(interaction, self.member)
-
 async def log_level_up(ctx, guild, member, new_level):
     if new_level <= 5:  # Don't log for levels >1 and <=5
         return
@@ -294,7 +284,6 @@ async def log_level_up(ctx, guild, member, new_level):
         title="Reputation Level Up Log",
         color=get_random_color(True)
     )
-    rep_view = RepView(member)
 
     # Instructions to check rank
     check_rank_instructions = "You can check your current reputation by typing `/rep`. If you want to check someone else's rep, type `/rep @username`. You can also right click on any user and go to `Apps > Show Reputation`. Try it now! All chats in this channel are cleared every hour."
@@ -304,10 +293,10 @@ async def log_level_up(ctx, guild, member, new_level):
         levelup_embed.add_field(name=timestamp + ' ' + log_text, value='\u200b', inline=False)
 
     if levelup_log_message:  # If a message already exists, edit it
-        await levelup_log_message.edit(embed=levelup_embed, view=rep_view)
+        await levelup_log_message.edit(embed=levelup_embed)
     else:  # If no message exists, send a new one and save its ID
         if levelup_log_channel:
-            levelup_log_message = await levelup_log_channel.send(embed=levelup_embed, view=rep_view)
+            levelup_log_message = await levelup_log_channel.send(embed=levelup_embed)
             guild_data['levelup_log_message'] = levelup_log_message.id
             save_guild_data(guild.id, guild_data)
         else:
