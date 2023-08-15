@@ -30,7 +30,7 @@ class DebugLogger:
     _instance = None
     bot = None
     DEBUG_INFO_FILE = 'data/debugconf.yaml'
-    CHAR_LIMIT = 3000
+    CHAR_LIMIT = 2000
     SLEEP_TIME = 10
 
     def __init__(self, bot=None):
