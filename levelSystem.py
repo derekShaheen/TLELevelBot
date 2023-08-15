@@ -306,11 +306,8 @@ async def log_level_up(ctx, guild, member, new_level):
             print(f"Level up log channel not found for guild {guild.id} ({guild.name})")
 
     if member is not None and new_level == 6:
-        username = member.display_name or member.name
-        username = username[0].upper() + username[1:] 
-
         embed = discord.Embed(
-            title=f"{username}, you have reached level 6!", 
+            title=f"{member_name}, you have reached level 6!", 
             description=f"{member.mention} Welcome to the reputation system! {get_celebration_emoji()} You gain reputation by participating in the server, and you're already level 6! We hope you enjoy your stay!", 
             color=get_random_color(True)
         )
