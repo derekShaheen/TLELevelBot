@@ -30,12 +30,16 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
     experience_gain = 0
     if source == 'voice_activity':
         if member.voice and member.voice.channel and (member.voice.channel.id != guild.afk_channel.id):
-            is_alone = len(member.voice.channel.members) == 1 or (member.voice.self_mute and member.voice.self_deaf)
-            all_others_idle = all((other_member.status == discord.Status.idle or (other_member.voice.self_mute and other_member.voice.self_deaf)) for other_member in member.voice.channel.members if other_member != member)
+            is_alone = len(member.voice.channel.members) == 1
+            is_idle = (member.voice.self_mute and member.voice.self_deaf) or member.status == discord.Status.idle or member.status == discord.Status.offline
+            all_others_idle = all((other_member.status == discord.Status.idle or
+                                    (other_member.voice.self_mute and other_member.voice.self_deaf)) for other_member in member.voice.channel.members if other_member != member)
             
             if member.voice.self_stream:
                 experience_gain += config['experience_streaming_bonus']
             if is_alone:
+                experience_gain += config['experience_per_minute_voice'] / 4
+            elif is_idle:
                 experience_gain += config['experience_per_minute_voice'] / 4
             elif all_others_idle:
                 experience_gain += config['experience_per_minute_voice'] / 3
