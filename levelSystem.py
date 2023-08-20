@@ -239,10 +239,12 @@ async def generate_leaderboard_image(bot, guild_id, full_board=False):
         if user:
             username = user.display_name or user.nick or user.name
             username = username.title()
-        elif user_data.get('username') is not None:
-            username = user_data['username']
         else:
-            username = user_id
+            continue
+        # elif user_data.get('username') is not None:
+        #     username = user_data['username']
+        # else:
+        #     username = user_id
 
         if not full_board:
             username = f'{username}'
@@ -257,7 +259,8 @@ async def generate_leaderboard_image(bot, guild_id, full_board=False):
 
     # Customize the plot
     ax.set_xlabel('Levels')
-    ax.set_title(f'Leaderboard: Top Users by Level')
+    ax.set_title(f'Leaderboard by Level')
+    plt.style.use('dark_background')
     plt.tight_layout()
 
     # Save the plot to an image file
