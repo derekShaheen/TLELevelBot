@@ -92,6 +92,10 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
     new_level = calculate_level(user_data['experience'])
     user_data['level'] = new_level
 
+    # Determine the username, save it to their data for future reference
+    username = member.display_name or member.nick or member.name
+    user_data['username'] = username  # Update the user_data with the username
+
     # Save user data
     save_user_data(guild.id, member.id, user_data)
 

@@ -67,7 +67,11 @@ async def on_ready():
         for user_id, user_data in user_data_list:
             # Note: The user_id should be converted to an integer
             member = guild.get_member(int(user_id))
-            await process_experience(bot, guild, member, debug, 'on_ready')
+            if member:  # Make sure the member still exists in the guild
+                await process_experience(bot, guild, member, debug, 'on_ready')
+            #else: 
+                #username = user_data.get('username') or "UNKNOWN"
+                #debug_logger.log(f"User {user_id} [{username}] not found in guild {guild.name}, skipping...")
         debug_logger.log(f"Processing complete.")
 
 
