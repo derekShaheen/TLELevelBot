@@ -260,7 +260,6 @@ async def generate_leaderboard_image(bot, guild_id, full_board=False):
     # Customize the plot
     ax.set_xlabel('Levels')
     ax.set_title(f'Leaderboard by Level')
-    plt.style.use('dark_background')
     plt.tight_layout()
 
     # Save the plot to an image file
@@ -274,7 +273,6 @@ async def generate_leaderboard_image(bot, guild_id, full_board=False):
 
 
 def calculate_level(experience, debug = False):
-    
     # # Get experience constant from config
     # config = load_config()
     # experience_constant = config['experience_constant']
