@@ -15,12 +15,27 @@ from debug_logger import DebugLogger
 async def process_experience(ctx, guild, member, debug=False, source=None, message=None):
     if source == 'voice_activity':
         if not member.voice:
-            return 0 # Do not issue experience if the member is not in a voice channel or is in the AFK channel, and the source is voice activity
+            return 0 # Do not issue experience if the member is not in a voice channel, and the source is voice activity
         
     debug_logger = DebugLogger.get_instance()
     user_data = load_user_data(guild.id, member.id)
     config = load_config()
+    
+    # If the source is "on_ready"
+    # Calculate the level and make sure it matches the xp gained, adjust roles, do not issue experience.
+    if source == "on_ready":
+        if user_data['experience'] == 0: # If the user has no experience, do not process
+            return 0
+        
+        calculated_level = calculate_level(user_data['experience'])
+        await adjust_roles(guild, calculated_level, member)
+        # If the calculated level does not match the stored level, update the stored level
+        if user_data['level'] != calculated_level:
+            user_data['level'] = calculated_level
+            save_user_data(guild.id, member.id, user_data)
 
+        return user_data['level']
+    
     if user_data.get('blacklisted'):
         debug_logger.log("➥ Issued 0r to {member.name} [blacklisted].")
         return 0
@@ -190,22 +205,39 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
     # Return the ASCII plot
     return ascii_plot
 
-
-#@lru_cache(maxsize=None)  # Unbounded cache, you may want to restrict the size in a real application
 def calculate_level(experience, debug = False):
-    # Get experience constant from config
-    config = load_config()
-    experience_constant = config['experience_constant']
     
-    # Using the formula: level = (level * math.pow((level, experience_constant)) + 30)
+    # # Get experience constant from config
+    # config = load_config()
+    # experience_constant = config['experience_constant']
+    
+    # # Using the formula: level = (level * math.pow((level, experience_constant)) + 30)
+    # level = 1
+    # while experience >= (level * (math.pow(level, experience_constant)) + 30):
+    #     if debug:
+    #         # Print on one line
+    #         print(f"Level: {level}, Experience: {experience}, Change: {(level * (math.pow(level, experience_constant)) + 30)}")
+    #     experience -= (level * (math.pow(level, experience_constant)) + 30)
+    #     level += 1
+    
+    # return level
+    # v2 Below
+    global experience_cache  # Access the global variable
+
+    # Ensure we have cached enough experience values for this calculation
+    while experience > experience_cache[-1]:
+        # If we need to expand the list, do it by 10 levels at a time
+        cumulative_experience_for_level(len(experience_cache) + 10)
+
+    # Search through the cache for the level
     level = 1
-    while experience >= (level * (math.pow(level, experience_constant)) + 30):
-        if debug:
-            # Print on one line
-            print(f"Level: {level}, Experience: {experience}, Change: {(level * (math.pow(level, experience_constant)) + 30)}")
-        experience -= (level * (math.pow(level, experience_constant)) + 30)
-        level += 1
-    
+    for i in range(1, len(experience_cache)):
+        if experience_cache[i] > experience:
+            break
+        level = i
+        #if debug:
+            #print(f"Level: {level}, Experience: {experience}, Change: {experience_cache[i]}")
+
     return level
 
 # Initialize the experience list globally

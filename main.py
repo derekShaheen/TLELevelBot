@@ -7,23 +7,25 @@ libraries = [
     ("asciichartpy", "asciichartpy"),
     ("pandas", "pandas"),
     ("pytz", "pytz"),
-    ("requests", "requests")
+    ("requests", "requests"),
+    ("pprint", "pprint")
 ]
 
 verify_libraries_installed(libraries)
 
 import asyncio
 import discord
-from discord import app_commands, Interaction
+from discord import app_commands
 from discord.ext import commands, tasks
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta
 from discord.ext.commands import Greedy, Context
 from typing import Literal, Optional
 
+import pprint
 import _secrets
-from configManager import load_user_data, load_config, save_user_data, load_guild_data, save_guild_data
-from levelSystem import process_experience, generate_leaderboard, log_level_up
-from util import get_initial_delay, get_random_color, send_developer_message
+from configManager import load_user_data, load_config, save_user_data, load_guild_data, save_guild_data, load_all_user_data
+from levelSystem import process_experience, generate_leaderboard, log_level_up, cumulative_experience_for_level
+from util import get_initial_delay, get_random_color
 from debug_logger import DebugLogger
 import auto_update_git
 
@@ -42,15 +44,32 @@ import commandsUser
 async def on_ready():
     if debug:
         debug_logger.start()
-        debug_logger.log(f"Configuration: {config}")
 
-        # Load guild data for each guild the bot is in
-        for guild in bot.guilds:
-            guild_data = load_guild_data(guild.id)
-            # Remove 'levelup_log' from data for logging
-            guild_data_for_logging = {k: v for k, v in guild_data.items() if k != 'levelup_log'}
-            debug_logger.log(f"Guild {guild.name} data: {guild_data_for_logging}")
-            await log_level_up(bot, guild, None, 0)
+    debug_logger.log(f"Configuration: {pprint.pformat(config)}")
+
+    # Pre-calculate the experience for 100 levels so it can be referenced in memory later
+    debug_logger.log(f"Pre-calculating experience for 100 levels...")
+    cumulative_experience_for_level(100)
+
+    # Load guild data for each guild the bot is in
+    for guild in bot.guilds:
+        guild_data = load_guild_data(guild.id)
+        # Remove 'levelup_log' from data for logging
+        guild_data_for_logging = {k: v for k, v in guild_data.items() if k != 'levelup_log'}
+        debug_logger.log(f"Guild {guild.name} data: ```{pprint.pformat(guild_data_for_logging)}```")
+
+        # Update the level up log message
+        await log_level_up(bot, guild, None, 0)
+        
+        # Process initial experience/roles for each user data in the guild
+        debug_logger.log(f"Processing initial experience/roles for guild {guild.name}...")
+        user_data_list = load_all_user_data(guild.id)
+        for user_id, user_data in user_data_list:
+            # Note: The user_id should be converted to an integer
+            member = guild.get_member(int(user_id))
+            await process_experience(bot, guild, member, debug, 'on_ready')
+        debug_logger.log(f"Processing complete.")
+
 
     voice_activity_tracker.start()
     update_leaderboard_task.start()
