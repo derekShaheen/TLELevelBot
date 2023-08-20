@@ -281,13 +281,14 @@ async def adjust_roles(guild, new_level, member):
             # Add role if level is less or equal to new level
             if level <= new_level and role not in member.roles:
                 await member.add_roles(role)
-                debug_logger.log(f"Added role id: {role_id} to member id: {member.id}")
+                debug_logger.log(f"Added role '{role.name}' to member '{member.name}'")
             # Remove role if level is above new level
             elif level > new_level and role in member.roles:
                 await member.remove_roles(role)
-                debug_logger.log(f"Removed role id: {role_id} from member id: {member.id}")
+                debug_logger.log(f"Removed role '{role.name}' from member '{member.name}'")
     else:
-        debug_logger.log(f"No 'level_roles' found in guild data for guild id: {guild.id}")
+        debug_logger.log(f"No 'level_roles' found in guild data for guild '{guild.name}'")
+
 
 async def log_level_up(ctx, guild, member, new_level):
     guild_data = load_guild_data(guild.id)

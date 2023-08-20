@@ -45,7 +45,7 @@ async def on_ready():
     if debug:
         debug_logger.start()
 
-    debug_logger.log(f"Configuration: {pprint.pformat(config)}")
+    debug_logger.log(f"Configuration: ```{pprint.pformat(config)}```")
 
     # Pre-calculate the experience for 100 levels so it can be referenced in memory later
     debug_logger.log(f"Pre-calculating experience for 100 levels...")
