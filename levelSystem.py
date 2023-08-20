@@ -230,27 +230,26 @@ async def generate_leaderboard_image(bot, guild_id, full_board=False):
 
     usernames = []
     levels = []
-    rank_emoji = ["🥇", "🥈", "🥉"] + ["🏅"]*2 + ["🔹"]*2 + ["🔸"]*2
+
     for rank, (user_id, user_data) in enumerate(user_data_list[:leader_depth], start=1):
-        if user_data["experience"] <= 5:
+        if user_data.get('experience') <= 5:
             continue
 
-        user = await guild.fetch_member(int(user_id))
-        username = user.display_name or user.nick or user.name
-        username = username.title()
-
-        if rank <= len(rank_emoji):
-            emoji = rank_emoji[rank-1]
+        user = guild.get_member(int(user_id))
+        if user:
+            username = user.display_name or user.nick or user.name
+            username = username.title()
+        elif user_data.get('username') is not None:
+            username = user_data['username']
         else:
-            emoji = "➖"
+            username = user_id
 
         if not full_board:
-            username = f'{emoji} {username}'
-        else:
-            username = f'{emoji} {rank}. {username}'
+            username = f'{username}'
+            username = f'{rank}. {username}'
 
         usernames.append(username)
-        levels.append(user_data["level"])
+        levels.append(user_data["experience"])
 
     # Create pyplot figure and axes
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -258,11 +257,11 @@ async def generate_leaderboard_image(bot, guild_id, full_board=False):
 
     # Customize the plot
     ax.set_xlabel('Levels')
-    ax.set_title(f'Leaderboard: Top {leader_depth if full_board else 9} Users by Level')
+    ax.set_title(f'Leaderboard: Top Users by Level')
     plt.tight_layout()
 
     # Save the plot to an image file
-    image_path = f'temp_leaderboard_{guild_id}.png'
+    image_path = f'data/{guild_id}/leaderboard.png'
     plt.savefig(image_path)
 
     # Close the plot
