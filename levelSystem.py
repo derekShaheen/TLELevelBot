@@ -249,7 +249,7 @@ async def generate_leaderboard_image(bot, guild_id, full_board=False):
             username = f'{rank}. {username}'
 
         usernames.append(username)
-        levels.append(user_data["experience"])
+        levels.append(user_data["level"])
 
     # Create pyplot figure and axes
     fig, ax = plt.subplots(figsize=(10, 6))
