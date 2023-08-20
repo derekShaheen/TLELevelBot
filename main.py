@@ -8,7 +8,8 @@ libraries = [
     ("pandas", "pandas"),
     ("pytz", "pytz"),
     ("requests", "requests"),
-    ("pprint", "pprint")
+    ("pprint", "pprint"),
+    ("matplotlib", "matplotlib")
 ]
 
 verify_libraries_installed(libraries)
@@ -24,7 +25,7 @@ from typing import Literal, Optional
 import pprint
 import _secrets
 from configManager import load_user_data, load_config, save_user_data, load_guild_data, save_guild_data, load_all_user_data
-from levelSystem import process_experience, generate_leaderboard, log_level_up, cumulative_experience_for_level
+from levelSystem import process_experience, generate_leaderboard, log_level_up, cumulative_experience_for_level, generate_leaderboard_image
 from util import get_initial_delay, get_random_color
 from debug_logger import DebugLogger
 import auto_update_git
@@ -211,7 +212,7 @@ async def clear_channel_except(guild_id: int, channel_id: int):
 
 @bot.tree.command(
     name='update_leaderboard',
-    description='Admin only command. Update the leaderboard. Optionally return the full board back to the user.',
+    description='Admin only command. Update the leaderboard.',
 )
 # @app_commands.choices(choices=[
 #     app_commands.Choice(name="Full Board", value=1),
@@ -239,8 +240,11 @@ async def update_leaderboard_command(interaction: discord.Interaction):
 async def update_leaderboard_command(interaction: discord.Interaction):
     await interaction.response.defer()  # Acknowledge the command, but don't send a response yet
 
-    leaderboard = await generate_leaderboard(bot, interaction.guild_id, True)
-    await interaction.followup.send(f"```{leaderboard}```")  # Send the full leaderboard as a response
+    image_path = await generate_leaderboard_image(bot, interaction.guild_id, True)
+    with discord.File(image_path, filename="leaderboard.png") as file:
+        embed = discord.Embed(title="Leaderboard")
+        embed.set_image(url="attachment://leaderboard.png")
+        await interaction.followup.send(file=file, embed=embed)
     
 #------ Sync Tree ------
 guild = discord.Object(id='262726474967023619')

@@ -8,6 +8,7 @@ import discord
 
 import asciichartpy
 import pandas as pd
+import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from util import get_random_color, get_celebration_emoji, add_commas
 from debug_logger import DebugLogger
@@ -208,6 +209,67 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
 
     # Return the ASCII plot
     return ascii_plot
+
+# Generate a matplotlib image of the leaderboard. Too many characters can be returned with the other function for discord to handle. Let's try an image
+async def generate_leaderboard_image(bot, guild_id, full_board=False):
+    leader_depth = 9
+    if full_board:
+        leader_depth = 999
+
+    user_data_files = glob.glob(f'data/{guild_id}/[!guild_data]*.yaml')
+
+    user_data_list = []
+    for user_data_file in user_data_files:
+        user_id = path.splitext(path.basename(user_data_file))[0]
+        user_data = load_user_data(guild_id, user_id)
+        user_data_list.append((user_id, user_data))
+
+    user_data_list.sort(key=lambda item: item[1]['experience'], reverse=True)
+
+    guild = bot.get_guild(guild_id)
+
+    usernames = []
+    levels = []
+    rank_emoji = ["🥇", "🥈", "🥉"] + ["🏅"]*2 + ["🔹"]*2 + ["🔸"]*2
+    for rank, (user_id, user_data) in enumerate(user_data_list[:leader_depth], start=1):
+        if user_data["experience"] <= 5:
+            continue
+
+        user = await guild.fetch_member(int(user_id))
+        username = user.display_name or user.nick or user.name
+        username = username.title()
+
+        if rank <= len(rank_emoji):
+            emoji = rank_emoji[rank-1]
+        else:
+            emoji = "➖"
+
+        if not full_board:
+            username = f'{emoji} {username}'
+        else:
+            username = f'{emoji} {rank}. {username}'
+
+        usernames.append(username)
+        levels.append(user_data["level"])
+
+    # Create pyplot figure and axes
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.barh(usernames[::-1], levels[::-1], color='skyblue')  # Reverse to have the top player at the top
+
+    # Customize the plot
+    ax.set_xlabel('Levels')
+    ax.set_title(f'Leaderboard: Top {leader_depth if full_board else 9} Users by Level')
+    plt.tight_layout()
+
+    # Save the plot to an image file
+    image_path = f'temp_leaderboard_{guild_id}.png'
+    plt.savefig(image_path)
+
+    # Close the plot
+    plt.close()
+
+    return image_path
+
 
 def calculate_level(experience, debug = False):
     
