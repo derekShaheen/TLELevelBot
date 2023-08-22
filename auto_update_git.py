@@ -35,7 +35,7 @@ async def check_version(bot):
 
     if check_sha and initial_run_sha != check_sha:
         debug_logger = DebugLogger.get_instance()
-        debug_logger.log(f"[New Version Detected] 🥳 Initiating the update and restart process... [{initial_run_sha}] -> [{check_sha}]")
+        debug_logger.log(f"[New Version Detected] 🥳 Initiating the update and restart process... [{initial_run_sha[:7]}] -> [{check_sha[:7]}]")
         try:
             await debug_logger.flush()
             await asyncio.sleep(1)

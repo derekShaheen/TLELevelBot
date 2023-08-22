@@ -58,7 +58,7 @@ class DebugLogger:
         # Add a timestamp to the message and store it in the message list
         now = datetime.now(pytz.timezone('US/Central'))
         #timestamp = now.strftime("[%Y-%m-%d %H:%M:%S]")
-        timestamp = now.strftime("%m-%d %H:%M:%S>")
+        timestamp = now.strftime("%m-%d %H:%M:%S]")
         debug_message = f"{timestamp} {message}"
         self.debug_message_list.append(debug_message)
         print(debug_message)
