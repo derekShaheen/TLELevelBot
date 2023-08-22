@@ -180,6 +180,7 @@ async def update_leaderboard():
             guild_data['leaderboard_message'] = leaderboard_message.id
             save_guild_data(guild.id, guild_data)
         debug_logger.log(f"Update complete.")
+        auto_update_git.backup_to_github()
 
 @update_leaderboard_task.before_loop
 async def before_update_leaderboard_task():

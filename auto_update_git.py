@@ -1,4 +1,5 @@
 import subprocess
+import os
 import asyncio
 from debug_logger import DebugLogger
 
@@ -42,6 +43,23 @@ async def check_version(bot):
             await bot.close()
         except:
             pass
+
+def backup_to_github():
+    debug_logger = DebugLogger.get_instance()
+    debug_logger.log(f"Uploading user data to backup repository...")
+    # 1. Copy data from TLERepBot to TLERepBotBackup
+    source_folder = "/home/derek/TLERepBot/data/"
+    dest_folder = "/home/derek/TLERepBotBackup/"
+    
+    # Using rsync to copy directory to ensure it only copies the changes.
+    subprocess.run(["rsync", "-av", source_folder, dest_folder])
+
+    # 2, 3, 4. Stage, commit, and push changes to GitHub repository
+    os.chdir(dest_folder)
+    subprocess.run(["git", "add", "-A"])
+    subprocess.run(["git", "commit", "-m", "Backup data"])
+    subprocess.run(["git", "push"])
+    debug_logger.log(f"Upload complete.")
 
 
 # Code below uses the GitHub API to check for updates and restart the bot if there is a new version.
