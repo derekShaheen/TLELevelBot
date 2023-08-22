@@ -103,7 +103,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
     # Adjust roles
     await adjust_roles(guild, new_level, member)
 
-    debug_logger.log(f"{experience_gain}r ➥ {member.name}. Rep: {add_commas(round(user_data['experience'] + experience_gain, 2))}, New Level: {new_level}, Prior Level: {current_level}")
+    debug_logger.log(f"{experience_gain}r ➥ {member.name} Rep: {add_commas(round(user_data['experience'] + experience_gain, 2))}")
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
 
@@ -246,16 +246,25 @@ async def generate_leaderboard_image(bot, guild_id, full_board=False):
         # else:
         #     username = user_id
 
-        if not full_board:
-            username = f'{username}'
-            username = f'{rank}. {username}'
+        username = f'{rank}. {username}'
 
         usernames.append(username)
         levels.append(user_data["level"])
 
     # Create pyplot figure and axes
+    plt.style.use('dark_background')
+    
     fig, ax = plt.subplots(figsize=(10, 6))
-    ax.barh(usernames[::-1], levels[::-1], color='skyblue')  # Reverse to have the top player at the top
+    bars = ax.barh(usernames[::-1], levels[::-1], color='skyblue')  # Reverse to have the top player at the top
+
+      # Add value labels to each bar
+    for bar in bars:
+        width = bar.get_width()
+        ax.annotate(f'{width}',
+                    xy=(bar.get_width() + 0.2, bar.get_y() + bar.get_height() / 2),
+                    xytext=(3, 0),  # 3 points horizontal offset
+                    textcoords="offset points",
+                    ha='center', va='center', color='white')
 
     # Customize the plot
     ax.set_xlabel('Levels')
