@@ -48,6 +48,7 @@ def backup_to_github():
     debug_logger = DebugLogger.get_instance()
     debug_logger.log(f"Uploading user data to backup repository...")
     # 1. Copy data from TLERepBot to TLERepBotBackup
+    home_folder = "/home/derek/TLERepBot/"
     source_folder = "/home/derek/TLERepBot/data/"
     dest_folder = "/home/derek/TLERepBotBackup/"
     
@@ -59,6 +60,7 @@ def backup_to_github():
     subprocess.run(["git", "add", "-A"])
     subprocess.run(["git", "commit", "-m", "Backup data"])
     subprocess.run(["git", "push"])
+    os.chdir(home_folder)
     debug_logger.log(f"Upload complete.")
 
 
