@@ -50,7 +50,7 @@ def backup_to_github():
     # 1. Copy data from TLERepBot to TLERepBotBackup
     home_folder = "/home/derek/TLERepBot/"
     source_folder = "/home/derek/TLERepBot/data/"
-    dest_folder = "/home/derek/TLERepBotBackup/"
+    dest_folder = "/home/derek/TLERepBotDataBackup/"
     
     # Using rsync to copy directory to ensure it only copies the changes.
     subprocess.run(["rsync", "-av", source_folder, dest_folder])
