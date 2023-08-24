@@ -55,6 +55,11 @@ def backup_to_github():
     # Using rsync to copy directory to ensure it only copies the changes.
     subprocess.run(["rsync", "-av", source_folder, dest_folder])
 
+        # Delete data/debugconf.yaml in the destination folder
+    debugconf_path = os.path.join(dest_folder, "debugconf.yaml")
+    if os.path.exists(debugconf_path):
+        os.remove(debugconf_path)
+
     # 2, 3, 4. Stage, commit, and push changes to GitHub repository
     os.chdir(dest_folder)
     subprocess.run(["git", "add", "-A"])
