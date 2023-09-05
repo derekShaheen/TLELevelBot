@@ -21,7 +21,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
     debug_logger = DebugLogger.get_instance()
     user_data = load_user_data(guild.id, member.id)
     config = load_config()
-    
+    modifier = ''
     # If the source is "on_ready"
     # Calculate the level and make sure it matches the xp gained, adjust roles, do not issue experience.
     if source == "on_ready":
@@ -53,19 +53,22 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
             
             if member.voice.self_stream:
                 experience_gain += config['experience_streaming_bonus']
+                modifier += 's'
             if is_alone:
                 experience_gain += config['experience_per_minute_voice'] / 4
+                modifier += 'a'
             elif is_idle:
-                experience_gain += config['experience_per_minute_voice'] / 4
+                #experience_gain += config['experience_per_minute_voice'] / 4
+                experience_gain = 1
+                modifier += 'i'
             elif all_others_idle:
                 experience_gain += config['experience_per_minute_voice'] / 3
+                modifier += 'o'
             else:
                 experience_gain += config['experience_per_minute_voice']
-            
-            # Don't issue experience if the member's status is idle
-            if member.status == discord.Status.idle:
-                experience_gain = 1   
+                
     elif source == 'chat':
+        modifier = 'c'
         now = datetime.now()
         user_data['chats_timestamps'] = [timestamp for timestamp in user_data['chats_timestamps'] if now - timestamp < timedelta(minutes=3)]
         num_chats = len(user_data['chats_timestamps'])
@@ -73,6 +76,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
         experience_gain = max(1, config['experience_per_chat'] * (1 - num_chats / config['chat_limit']))
         if message.author.voice and message.author.voice.channel:
             experience_gain /= 3
+            modifier = 'v'
     else:
         debug_logger.log(f"Invalid source provided to process_experience: {source}")
         return 0
@@ -83,6 +87,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
 
     if discord.utils.get(member.roles, name='Server Booster') is not None:
         experience_gain *= 1.1
+        modifier += 'b'
 
     experience_gain = round(experience_gain, 2)
     user_data['experience'] = round(user_data['experience'] + experience_gain, 2)
@@ -103,7 +108,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
     # Adjust roles
     await adjust_roles(guild, new_level, member)
 
-    debug_logger.log(f"{experience_gain}r ➥ {member.name} Rep: {add_commas(round(user_data['experience'] + experience_gain, 2))}")
+    debug_logger.log(f"{experience_gain}r ➥ {member.name} Rep: {add_commas(round(user_data['experience'] + experience_gain, 2))} | {modifier}")
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
 
