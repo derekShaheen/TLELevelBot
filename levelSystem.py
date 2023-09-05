@@ -68,7 +68,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
                 experience_gain += config['experience_per_minute_voice']
                 
     elif source == 'chat':
-        modifier = 'c'
+        modifier += 'c'
         now = datetime.now()
         user_data['chats_timestamps'] = [timestamp for timestamp in user_data['chats_timestamps'] if now - timestamp < timedelta(minutes=3)]
         num_chats = len(user_data['chats_timestamps'])
@@ -76,7 +76,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
         experience_gain = max(1, config['experience_per_chat'] * (1 - num_chats / config['chat_limit']))
         if message.author.voice and message.author.voice.channel:
             experience_gain /= 3
-            modifier = 'v'
+            modifier += 'v'
     else:
         debug_logger.log(f"Invalid source provided to process_experience: {source}")
         return 0
@@ -108,7 +108,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
     # Adjust roles
     await adjust_roles(guild, new_level, member)
 
-    debug_logger.log(f"{experience_gain}r ➥ {member.name} Rep: {add_commas(round(user_data['experience'] + experience_gain, 2))} | {modifier}")
+    debug_logger.log(f"{experience_gain}r ➥ {member.name} Rep: {add_commas(round(user_data['experience'] + experience_gain, 2))} {modifier}")
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
 
