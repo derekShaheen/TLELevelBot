@@ -47,7 +47,8 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
     if source == 'voice_activity':
         if member.voice and member.voice.channel and (member.voice.channel.id != guild.afk_channel.id):
             is_alone = len(member.voice.channel.members) == 1
-            is_idle = (member.voice.self_mute and member.voice.self_deaf) or member.status == discord.Status.idle or member.status == discord.Status.offline
+            is_fullmute = (member.voice.self_mute and member.voice.self_deaf)
+            is_idle = member.status == discord.Status.idle or member.status == discord.Status.offline
             all_others_idle = all((other_member.status == discord.Status.idle or
                                     (other_member.voice.self_mute and other_member.voice.self_deaf)) for other_member in member.voice.channel.members if other_member != member)
             
@@ -61,6 +62,10 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
                 #experience_gain += config['experience_per_minute_voice'] / 4
                 experience_gain = 1
                 modifier += 'i'
+            elif is_fullmute:
+                #experience_gain += config['experience_per_minute_voice'] / 4
+                experience_gain = 1
+                modifier += 'm'
             elif all_others_idle:
                 experience_gain += config['experience_per_minute_voice'] / 3
                 modifier += 'o'
