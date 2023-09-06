@@ -52,9 +52,8 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
             all_others_idle = all((other_member.status == discord.Status.idle or
                                     (other_member.voice.self_mute and other_member.voice.self_deaf)) for other_member in member.voice.channel.members if other_member != member)
             
-            if member.voice.self_stream:
-                experience_gain += config['experience_streaming_bonus']
-                modifier += 's'
+            modifier += 'v'
+
             if is_alone:
                 experience_gain += config['experience_per_minute_voice'] / 4
                 modifier += 'a'
@@ -71,8 +70,11 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
                 modifier += 'o'
             else:
                 experience_gain += config['experience_per_minute_voice']
-                modifier += 'v'
                 
+            if member.voice.self_stream:
+                experience_gain += config['experience_streaming_bonus']
+                modifier += 's'
+
     elif source == 'chat':
         modifier += 'c'
         now = datetime.now()
