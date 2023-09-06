@@ -113,7 +113,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
     # Adjust roles
     await adjust_roles(guild, new_level, member)
 
-    debug_logger.log(f"{experience_gain}r ➥ {member.name} Rep: {add_commas(round(user_data['experience'] + experience_gain, 2))} {modifier}")
+    debug_logger.log(f"{experience_gain}r {modifier} ➥ {member.name} Rep: {add_commas(round(user_data['experience'] + experience_gain, 2))}")
     if current_level != new_level:
         await log_level_up(ctx, guild, member, new_level)
 
