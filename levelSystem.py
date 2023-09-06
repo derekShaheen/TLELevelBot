@@ -71,6 +71,7 @@ async def process_experience(ctx, guild, member, debug=False, source=None, messa
                 modifier += 'o'
             else:
                 experience_gain += config['experience_per_minute_voice']
+                modifier += 'v'
                 
     elif source == 'chat':
         modifier += 'c'
