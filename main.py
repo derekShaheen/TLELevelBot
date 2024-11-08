@@ -62,26 +62,27 @@ async def on_ready():
 
     # Load guild data for each guild the bot is in
     for guild in bot.guilds:
-        guild_data = load_guild_data(guild.id)
-        # Remove 'levelup_log' from data for logging
-        guild_data_for_logging = {k: v for k, v in guild_data.items() if k != 'levelup_log'}
-        debug_logger.log(f"Guild {guild.name} data: ```{pprint.pformat(guild_data_for_logging)}```")
+        if guild.id == 262726474967023619:
+            guild_data = load_guild_data(guild.id)
+            # Remove 'levelup_log' from data for logging
+            guild_data_for_logging = {k: v for k, v in guild_data.items() if k != 'levelup_log'}
+            debug_logger.log(f"Guild {guild.name} data: ```{pprint.pformat(guild_data_for_logging)}```")
 
-        # Update the level up log message
-        await log_level_up(bot, guild, None, 0)
-        
-        # Process initial experience/roles for each user data in the guild
-        debug_logger.log(f"Processing initial experience/roles for guild {guild.name}...")
-        user_data_list = load_all_user_data(guild.id)
-        for user_id, user_data in user_data_list:
-            # Note: The user_id should be converted to an integer
-            member = guild.get_member(int(user_id))
-            if member:  # Make sure the member still exists in the guild
-                await process_experience(bot, guild, member, debug, 'on_ready')
-            #else: 
-                #username = user_data.get('username') or "UNKNOWN"
-                #debug_logger.log(f"User {user_id} [{username}] not found in guild {guild.name}, skipping...")
-        debug_logger.log(f"Processing complete.")
+            # Update the level up log message
+            await log_level_up(bot, guild, None, 0)
+            
+            # Process initial experience/roles for each user data in the guild
+            debug_logger.log(f"Processing initial experience/roles for guild {guild.name}...")
+            user_data_list = load_all_user_data(guild.id)
+            for user_id, user_data in user_data_list:
+                # Note: The user_id should be converted to an integer
+                member = guild.get_member(int(user_id))
+                if member:  # Make sure the member still exists in the guild
+                    await process_experience(bot, guild, member, debug, 'on_ready')
+                #else: 
+                    #username = user_data.get('username') or "UNKNOWN"
+                    #debug_logger.log(f"User {user_id} [{username}] not found in guild {guild.name}, skipping...")
+            debug_logger.log(f"Processing complete.")
 
 
     voice_activity_tracker.start()
