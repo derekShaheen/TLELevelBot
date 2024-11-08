@@ -3,12 +3,6 @@ import subprocess
 import sys
 import random
 
-import discord
-from datetime import time, timedelta, datetime
-import pytz
-import math
-from _secrets import DEVELOPER_ID, SERVER_TIMEZONE
-
 def verify_libraries_installed(libraries):
     for library in libraries:
         try:
@@ -16,6 +10,12 @@ def verify_libraries_installed(libraries):
         except ImportError:
             print(f"{library[0]} not installed. Installing...")
             subprocess.call([sys.executable, "-m", "pip", "install", library[1]])
+
+import discord
+from datetime import time, timedelta, datetime
+import pytz
+import math
+from _secrets import DEVELOPER_ID, SERVER_TIMEZONE
 
 # async def send_embed(ctx, title, description, color):
 #     embed = discord.Embed(title=title, description=description, color=color)

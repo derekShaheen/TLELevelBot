@@ -38,7 +38,7 @@ class DebugLogger:
             DebugLogger.bot = bot
         if DebugLogger._instance is None:
             self.debug_message_list = []
-            self.current_message_info = {'id': None, 'content': []}  # Initialize with no message ID and empty content
+            self.current_message_info = {'id': '', 'content': []}  # Initialize with no message ID and empty content
             DebugLogger._instance = self
         else:
             raise Exception("You cannot create another DebugLogger class!")  # Enforce singleton instance
@@ -58,7 +58,7 @@ class DebugLogger:
         # Add a timestamp to the message and store it in the message list
         now = datetime.now(pytz.timezone('US/Central'))
         #timestamp = now.strftime("[%Y-%m-%d %H:%M:%S]")
-        timestamp = now.strftime("%H:%M:%S]")
+        timestamp = now.strftime("%m-%d %H:%M:%S]")
         debug_message = f"{timestamp} {message}"
         self.debug_message_list.append(debug_message)
         print(debug_message)
@@ -75,7 +75,7 @@ class DebugLogger:
             with open(self.DEBUG_INFO_FILE, 'r') as f:
                 self.current_message_info = yaml.safe_load(f)
         else:
-            self.current_message_info = {'id': None, 'content': []}
+            self.current_message_info = {'id': '', 'content': []}
 
     def save_message_info(self):
         # Save the current message ID and content to the YAML file
@@ -84,36 +84,37 @@ class DebugLogger:
 
     async def flush(self):
         if self.debug_message_list:
-            self.current_message_info['content'].extend(self.debug_message_list)
-            self.debug_message_list = []
+            if self.current_message_info is not None:
+                self.current_message_info['content'].extend(self.debug_message_list)
+                self.debug_message_list = []
 
-            lines = self.current_message_info['content']
-            new_content = ""
-            for line in reversed(lines):
-                if len(new_content + line + "\n") <= self.CHAR_LIMIT:
-                    new_content = line + "\n" + new_content
-                else:
-                    break
-            new_content = new_content.strip()
+                lines = self.current_message_info['content']
+                new_content = ""
+                for line in reversed(lines):
+                    if len(new_content + line + "\n") <= self.CHAR_LIMIT:
+                        new_content = line + "\n" + new_content
+                    else:
+                        break
+                new_content = new_content.strip()
 
-            developer = await self.get_developer()
+                developer = await self.get_developer()
 
-            self.load_message_info()
-
-            if self.current_message_info['id']:
-                try:
-                    current_message = await developer.fetch_message(self.current_message_info['id'])
-                    await current_message.edit(content=new_content)
-                    self.current_message_info['content'] = new_content.split('\n')
-                    self.save_message_info()
-                except discord.NotFound:
-                    current_message = await developer.send(content=new_content)
-                    self.current_message_info = {'id': current_message.id, 'content': new_content.split('\n')}
-                    self.save_message_info()
-            else:
-                current_message = await developer.send(content=new_content)
-                self.current_message_info = {'id': current_message.id, 'content': new_content.split('\n')}
-                self.save_message_info()
+                self.load_message_info()
+                if self.current_message_info:
+                    if self.current_message_info['id']:
+                        try:
+                            current_message = await developer.fetch_message(self.current_message_info['id'])
+                            await current_message.edit(content=new_content)
+                            self.current_message_info['content'] = new_content.split('\n')
+                            self.save_message_info()
+                        except discord.NotFound:
+                            current_message = await developer.send(content=new_content)
+                            self.current_message_info = {'id': current_message.id, 'content': new_content.split('\n')}
+                            self.save_message_info()
+                    else:
+                        current_message = await developer.send(content=new_content)
+                        self.current_message_info = {'id': current_message.id, 'content': new_content.split('\n')}
+                        self.save_message_info()
 
     async def send_loop(self):
         while True:

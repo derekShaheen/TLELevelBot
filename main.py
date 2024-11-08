@@ -46,7 +46,15 @@ async def on_ready():
     if debug:
         debug_logger.start()
 
+    # Leave all guilds except the one with ID 262726474967023619
+    for guild in bot.guilds:
+        if guild.id != 262726474967023619:
+            await guild.leave()
+            print(f"Left guild {guild.name} ({guild.id})")
+
     debug_logger.log(f"Configuration: ```{pprint.pformat(config)}```")
+
+    check_version.start()
 
     # Pre-calculate the experience for 100 levels so it can be referenced in memory later
     debug_logger.log(f"Pre-calculating experience for 100 levels...")
@@ -78,10 +86,8 @@ async def on_ready():
 
     voice_activity_tracker.start()
     update_leaderboard_task.start()
-
-    check_version.start()
     
-#    await update_leaderboard()
+    await update_leaderboard()
 #    await check_version()
 
 @tasks.loop(minutes=1)

@@ -1,6 +1,6 @@
 import subprocess
-import os
 import asyncio
+from pathlib import Path
 from debug_logger import DebugLogger
 
 initial_run_sha = None
@@ -46,27 +46,29 @@ async def check_version(bot):
 
 def backup_to_github():
     debug_logger = DebugLogger.get_instance()
-    debug_logger.log(f"Uploading user data to backup repository...")
-    # 1. Copy data from TLERepBot to TLERepBotBackup
-    home_folder = "/home/derek/TLERepBot/"
-    source_folder = "/home/derek/TLERepBot/data/"
-    dest_folder = "/home/derek/TLERepBotDataBackup/"
-    
+    debug_logger.log("Uploading user data to backup repository...")
+
+    # Relative paths assuming script is run from a specific root directory
+    root_folder = Path.cwd()
+    source_folder = root_folder / "data"
+    dest_folder = root_folder.parent / "TLERepBotData"
+
     # Using rsync to copy directory to ensure it only copies the changes.
-    subprocess.run(["rsync", "-av", source_folder, dest_folder])
+    command = ["xcopy", str(source_folder) + "\\*", str(dest_folder), "/E", "/Y", "/I", "/D"]
+    debug_logger.log(f"{command}")
+    subprocess.run(command)
 
-        # Delete data/debugconf.yaml in the destination folder
-    debugconf_path = os.path.join(dest_folder, "debugconf.yaml")
-    if os.path.exists(debugconf_path):
-        os.remove(debugconf_path)
+    # Delete data/debugconf.yaml in the destination folder
+    debugconf_path = dest_folder / "debugconf.yaml"
+    if debugconf_path.exists():
+        debugconf_path.unlink()
 
-    # 2, 3, 4. Stage, commit, and push changes to GitHub repository
-    os.chdir(dest_folder)
-    subprocess.run(["git", "add", "-A"])
-    subprocess.run(["git", "commit", "-m", "Backup data"])
-    subprocess.run(["git", "push"])
-    os.chdir(home_folder)
-    debug_logger.log(f"Upload complete.")
+    # Stage, commit, and push changes to GitHub repository
+    subprocess.run(["git", "-C", str(dest_folder), "add", "-A"])
+    subprocess.run(["git", "-C", str(dest_folder), "commit", "-m", "Backup data"])
+    subprocess.run(["git", "-C", str(dest_folder), "push"])
+
+    debug_logger.log("Upload complete.")
 
 
 # Code below uses the GitHub API to check for updates and restart the bot if there is a new version.
