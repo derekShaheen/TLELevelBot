@@ -402,9 +402,15 @@ async def log_level_up(ctx, guild, member, new_level):
         new_levelup_text = f"{member_name} is now level {new_level}! {get_celebration_emoji()}"
 
         # If the levelup_log exists in guild_data, append the new level up text to the list
-        # and slice the list to keep only the last 10 elements. If it does not exist, initialize it
+        # and slice the list to keep only the last x elements. If it does not exist, initialize it
         guild_data.setdefault('levelup_log', [])
-        guild_data['levelup_log'].append((timestamp, new_levelup_text))
+        if guild_data['levelup_log'] and member_name in guild_data['levelup_log'][-1][1]:
+            # Update the last entry with the new level
+            guild_data['levelup_log'][-1] = (timestamp, new_levelup_text)
+        else:
+            # Add a new entry if the member is different or no recent log exists
+            guild_data['levelup_log'].append((timestamp, new_levelup_text))
+
         guild_data['levelup_log'] = guild_data['levelup_log'][-6:]
         save_guild_data(guild.id, guild_data)
 

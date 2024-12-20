@@ -43,14 +43,14 @@ import commandsUser
 
 @bot.event
 async def on_ready():
-    if debug:
-        debug_logger.start()
-
     # Leave all guilds except the one with ID 262726474967023619
     for guild in bot.guilds:
         if guild.id != 262726474967023619:
             await guild.leave()
             print(f"Left guild {guild.name} ({guild.id})")
+
+    if debug:
+        debug_logger.start()
 
     debug_logger.log(f"Configuration: ```{pprint.pformat(config)}```")
 
@@ -60,36 +60,34 @@ async def on_ready():
     debug_logger.log(f"Pre-calculating experience for 100 levels...")
     cumulative_experience_for_level(100)
 
-    # Load guild data for each guild the bot is in
-    for guild in bot.guilds:
-        if guild.id == 262726474967023619:
-            guild_data = load_guild_data(guild.id)
-            # Remove 'levelup_log' from data for logging
-            guild_data_for_logging = {k: v for k, v in guild_data.items() if k != 'levelup_log'}
-            debug_logger.log(f"Guild {guild.name} data: ```{pprint.pformat(guild_data_for_logging)}```")
+    # Load guild data for TLE
+    guild = bot.get_guild(262726474967023619)
+    if guild:
+        guild_data = load_guild_data(guild.id)
+        # Remove 'levelup_log' from data for logging
+        guild_data_for_logging = {k: v for k, v in guild_data.items() if k != 'levelup_log'}
+        debug_logger.log(f"Guild {guild.name} data: ```{pprint.pformat(guild_data_for_logging)}```")
 
-            # Update the level up log message
-            await log_level_up(bot, guild, None, 0)
-            
-            # Process initial experience/roles for each user data in the guild
-            debug_logger.log(f"Processing initial experience/roles for guild {guild.name}...")
-            user_data_list = load_all_user_data(guild.id)
-            for user_id, user_data in user_data_list:
-                # Note: The user_id should be converted to an integer
-                member = guild.get_member(int(user_id))
-                if member:  # Make sure the member still exists in the guild
-                    await process_experience(bot, guild, member, debug, 'on_ready')
-                #else: 
-                    #username = user_data.get('username') or "UNKNOWN"
-                    #debug_logger.log(f"User {user_id} [{username}] not found in guild {guild.name}, skipping...")
-            debug_logger.log(f"Processing complete.")
-
+        # Update the level up log message
+        await log_level_up(bot, guild, None, 0)
+        
+        # Process initial experience/roles for each user data in the guild
+        debug_logger.log(f"Processing initial experience/roles for guild {guild.name}...")
+        user_data_list = load_all_user_data(guild.id)
+        for user_id, user_data in user_data_list:
+            # Note: The user_id should be converted to an integer
+            member = guild.get_member(int(user_id))
+            if member:  # Make sure the member still exists in the guild
+                await process_experience(bot, guild, member, debug, 'on_ready')
+        debug_logger.log(f"Processing complete.")
+    else:
+        print("Bot is not in TLE!")
 
     voice_activity_tracker.start()
     update_leaderboard_task.start()
     
     await update_leaderboard()
-#    await check_version()
+
 
 @tasks.loop(minutes=1)
 async def voice_activity_tracker():
@@ -109,6 +107,15 @@ async def before_voice_activity_tracker():
     if debug:
         print('Update credits scheduled for: {}'.format(initial_delay))
     await asyncio.sleep(initial_delay)
+
+@bot.event
+async def on_guild_join(guild):
+    allowed_guild_id = 262726474967023619  # TLE
+    if guild.id != allowed_guild_id:
+        await guild.leave()
+        print(f"Left guild {guild.name} ({guild.id}) because it's not the allowed guild.")
+    else:
+        print(f"Joined the allowed guild {guild.name} ({guild.id}).")
 
 @bot.event
 async def on_message(message):
