@@ -150,9 +150,13 @@ async def generate_leaderboard(bot, guild_id, full_board = False):
         if user_data["experience"] <= 5:
             continue
 
-        user = await guild.fetch_member(int(user_id))# -- PULL FROM GUILD
+        user = await guild.fetch_member(int(user_id))  # Fetch member from the guild
+        if not user:  # Skip if the user is not found
+            continue
+
         username = user.display_name or user.nick or user.name
         username = username.title()  # Titlize the username
+
 
         # Check if rank exceeds the length of rank_emoji
         if rank <= len(rank_emoji):
